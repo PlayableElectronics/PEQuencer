@@ -9,25 +9,6 @@
 //#include "oled.h"
 #include "ui/ui.h"
 
-struct Track {
-  uint step;
-  uint offset;
-  uint limit;
-  int  note;
-  uint mute;
-  uint gate;
-  uint channel;
-  uint velocity;
-  uint bpm;
-};
-
-struct Preset {
-  struct Track tracks[16];
-};
-
-struct Track track;
-struct Preset preset2;
-
 const uint LED_PIN = 13;//PICO_DEFAULT_LED_PIN;
 static QueueHandle_t xClock, xSeq, xNoteOn  = NULL;
 
@@ -142,6 +123,7 @@ void ch2_task(void *pvParameters){
 
 int main() {
     stdio_init_all();
+    stdio_uart_init_full(uart1, 115200, 20, 21);
     rgb_init();
     //task
     uint notes[16];
@@ -155,15 +137,18 @@ int main() {
     //xTaskCreate(channel_task, "RGB_Task2", 256, (void *) ch3, 1, NULL);
     //xTaskCreate(send_task, "send", 256, NULL, 1, NULL);
     //xTaskCreate(send_task1, "send", 256, NULL, 1, NULL);
+    
     xTaskCreate(clock_task, "clock", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
+    
     //xTaskCreate(seq_task, "seq", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
     //xTaskCreate(noteon_task, "note", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
     //xTaskCreate(noteoff_task, "noteoff", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
     //xTaskCreate(note1_task, "note1", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
     //xTaskCreate(ch2_task, "note1", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
+    
     xTaskCreate(display_task, "display", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
     vTaskStartScheduler();
-
+    //display_task();
     while(1){
     };
 }

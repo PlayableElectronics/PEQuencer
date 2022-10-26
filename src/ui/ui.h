@@ -1,5 +1,24 @@
 #include "defs.h"
 
+struct Track {
+  uint step;
+  uint offset;
+  uint limit;
+  int  note;
+  uint mute;
+  uint gate;
+  uint channel;
+  uint velocity;
+  uint bpm;
+};
+
+struct Preset {
+  struct Track tracks[16];
+};
+
+struct Track track;
+struct Preset preset;
+
 int eachNote[8][16] = {
  {48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48},
  {48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48},
@@ -35,17 +54,17 @@ int subMenu4Pos = 1;
 // debounce
 int debounce = 5;
 
-int preset[9][8] ={
-  {4, 4, 5, 3, 2, 16, 1, 3},                        // each channel step
-  {0, 2, 0, 8, 3, 9, 2 ,2},                         // each channel offset
-  {16, 16, 16, 16, 16, 16, 16, 16},                 // each channel limit
-  {48, 48, 48, 48, 48, 48, 48, 48},                 // each channel default note
-  {1, 0, 0, 0, 0, 0, 0, 0},                         // each channel mute 0 = off , 1 = on
-  {10, 10, 10, 10, 10, 10, 10, 10},                 // each channel gate timer
-  {1, 2, 3, 4, 5, 6, 7, 8},                         // midi channel
-  {127, 127, 127, 127, 127, 127, 127, 127},         // each channel velocity
-  {132, 132, 132, 132, 132, 132, 132, 132}          // BPM
-};
+// int preset[9][8] ={
+//   {4, 4, 5, 3, 2, 16, 1, 3},                        // each channel step
+//   {0, 2, 0, 8, 3, 9, 2 ,2},                         // each channel offset
+//   {16, 16, 16, 16, 16, 16, 16, 16},                 // each channel limit
+//   {48, 48, 48, 48, 48, 48, 48, 48},                 // each channel default note
+//   {1, 0, 0, 0, 0, 0, 0, 0},                         // each channel mute 0 = off , 1 = on
+//   {10, 10, 10, 10, 10, 10, 10, 10},                 // each channel gate timer
+//   {1, 2, 3, 4, 5, 6, 7, 8},                         // midi channel
+//   {127, 127, 127, 127, 127, 127, 127, 127},         // each channel velocity
+//   {132, 132, 132, 132, 132, 132, 132, 132}          // BPM
+// };
 
 bool offset_buf[8][16];//offset buffer , Stores the offset result
 int select_ch = 1; //0~5 = each channel -1 , 6 = random mode
@@ -82,32 +101,32 @@ void fixEncoderMenu(int channel){
       case 1:
         switch (subMenuPosition){
           case 1:
-            encoder.setPosition(preset[0][channel -1]);
+            encoder.setPosition(preset.tracks[channel -1].step);
             break;
           case 2:
-            encoder.setPosition(preset[1][channel -1]);
+            encoder.setPosition(preset.tracks[channel -1].offset);
             break;
           case 3:
-            encoder.setPosition(preset[2][channel -1]);
+            encoder.setPosition(preset.tracks[channel -1].limit);
             break;
           case 4:
-            encoder.setPosition(preset[3][channel -1]);
+            encoder.setPosition(preset.tracks[channel -1].note);
             break;
           case 5:
-            encoder.setPosition(preset[8][channel -1]);
+            encoder.setPosition(preset.tracks[channel -1].bpm);
             break;
         }
         break;
       case 2:
         switch (subMenuPosition){
           case 1:
-            encoder.setPosition(preset[6][channel -1]);
+            encoder.setPosition(preset.tracks[channel -1].channel);
             break;
           case 2:
-            encoder.setPosition(preset[5][channel -1]);
+            encoder.setPosition(preset.tracks[channel -1].gate);
             break;
           case 3:
-            encoder.setPosition(preset[7][channel -1]);
+            encoder.setPosition(preset.tracks[channel -1].velocity);
             break;
           case 4:
             break;
@@ -183,43 +202,41 @@ void encoderClick(){
 }
 
 // Get encoder Position, set Min and Max value
-void getEncoderPosition(int ROTARYMIN, int ROTARYMAX, int PRESET_SELECT, bool JUMP_TO){
-    newPos = encoder.getPosition ();
+int getEncoderPosition(int ROTARYMIN, int ROTARYMAX, bool JUMP_TO){
+    newPos = encoder.getPosition();
     if (newPos > ROTARYMAX){
         if(JUMP_TO == false){
           newPos = ROTARYMAX;
           encoder.setPosition(ROTARYMAX);
-          preset[PRESET_SELECT][select_ch -1] = ROTARYMAX;
         } else if (JUMP_TO == true){
           newPos = ROTARYMIN;
           encoder.setPosition(ROTARYMIN);
-          preset[PRESET_SELECT][select_ch -1] = ROTARYMIN;
         }
 
     } else if (newPos < ROTARYMIN){
         if(JUMP_TO == false){
           newPos = ROTARYMIN;
           encoder.setPosition(ROTARYMIN);
-          preset[PRESET_SELECT][select_ch -1] = ROTARYMAX;
         }else if(JUMP_TO == true){
           newPos = ROTARYMAX;
           encoder.setPosition(ROTARYMAX);
-          preset[PRESET_SELECT][select_ch -1] = ROTARYMIN;
         }
-
+    
     }
-    preset[PRESET_SELECT][select_ch -1] = newPos;
+    return newPos;
 }
 
 // Draw statics lines and dots
 void drawStatics(int current_page){
+  
   display.setTextColor(SH110X_WHITE);
   for (int m = 0; m < 5; m++) {
     display.setCursor(0, m*10);
     display.print(menus[current_page][m]);
   }
+  
   display.fillRect(0, 53, 9, 12, SH110X_WHITE);
-  if (preset[4][select_ch - 1] == 0){
+  if (preset.tracks[select_ch -1].mute == 0){
       display.fillRect(0, 53, 40, 12, SH110X_WHITE);
       display.setTextColor(SH110X_BLACK);
       display.setCursor(2, 55);
@@ -237,14 +254,37 @@ void drawStatics(int current_page){
     //pixels.setPixelColor(MENU_LED[i]-1, 0x001F00);
   }
   //pixels.setPixelColor(MENU_LED[current_page]-1, 0x00FF00);
-
   if (current_page == 0){
-    for (int j = 0; j <= preset[2][select_ch-1] - 1; j++) { // j = steps
+    
+    for (int x = 0; x < 8; x++){
+    if (x == select_ch -1){
+      buf_count = 0;
+      for (int m = 0; m < 16; m++) {
+        if (offset_buf[select_ch - 1][m] == 1) {
+          line_xbuf[buf_count] = x16[m];
+          line_ybuf[buf_count] = y16[m];
+          buf_count++;
+        }
+      }
+    }
+  }
+
+  for (int k = 0; k < 8; k++){
+    for (int i = preset.tracks[k].offset; i < 16; i++) {
+      offset_buf[k][i - preset.tracks[k].offset] = (pgm_read_byte(&(euc16[preset.tracks[k].step][i]))) ;
+    }
+    for (int i = 0; i < preset.tracks[k].offset; i++) {
+      offset_buf[k][16 - preset.tracks[k].offset + i] = (pgm_read_byte(&(euc16[preset.tracks[k].step][i])));
+    }
+  }
+
+
+    for (int j = 0; j <= preset.tracks[select_ch -1].limit; j++) { // j = steps
       display.drawPixel(x16[j], y16[j], SH110X_WHITE);
     }
-    if (preset[0][select_ch] > 1){
+    if (preset.tracks[select_ch -1].step > 1){
       for (j = 0; j < buf_count - 1; j++) {
-      display.drawLine(line_xbuf[j], line_ybuf[j], line_xbuf[j + 1], line_ybuf[j + 1], SH110X_WHITE);
+        display.drawLine(line_xbuf[j], line_ybuf[j], line_xbuf[j + 1], line_ybuf[j + 1], SH110X_WHITE);
       }
       display.drawLine(line_xbuf[0], line_ybuf[0], line_xbuf[j], line_ybuf[j], SH110X_WHITE);
   }
@@ -272,7 +312,7 @@ void fixEncoderClick(int Menu){
 // Select and mute channel
 void selectChannel(int channel){
   if (channel == select_ch){
-    preset[4][channel - 1] = !preset[4][channel - 1];
+    preset.tracks[select_ch -1].mute = !preset.tracks[select_ch -1].mute;
   } else{
     fixEncoderMenu(channel);
   }
@@ -297,54 +337,75 @@ void eventsRead(){
 }
 
 // Fill black rect and draw fixed text over this rect
-void FixCenterText(int value){ // Fixi
-  if (preset[value][select_ch - 1] >= 10){
+
+void Step(){
+  display.fillRect(68, 27, 13,9, SH110X_BLACK );
+  preset.tracks[select_ch -1].step = getEncoderPosition(0, 16, true);
+  if (preset.tracks[select_ch -1].step >= 10){
       display.fillRect(68, 27, 13,9, SH110X_BLACK );
       display.setCursor(69, 28);
-      display.print(preset[value][select_ch - 1]);
+      display.print(preset.tracks[select_ch -1].step);
   } else {
       display.fillRect(71, 27, 7,9, SH110X_BLACK );
       display.setCursor(72, 28);
-      display.print(preset[value][select_ch - 1]);
+      display.print(preset.tracks[select_ch -1].step);
   }
 }
 
-void Step(int value){
+void Offset(){
   display.fillRect(68, 27, 13,9, SH110X_BLACK );
-  getEncoderPosition(0, 16, value, true);
-  FixCenterText(value);
-}
-
-void Offset(int value){
-  display.fillRect(68, 27, 13,9, SH110X_BLACK );
-  getEncoderPosition(0, 15, value, true);
-  FixCenterText(value);
-}
-
-void Limit(int value){
-  display.fillRect(68, 27, 13,9, SH110X_BLACK );
-  getEncoderPosition(0, 16, value, true);
-  FixCenterText(value);
-}
-
-void Note(int value){
-  display.fillRect(68, 27, 13,9, SH110X_BLACK );
-  getEncoderPosition(21, 108, value, true);
-  if (preset[value][select_ch - 1] >= 10){
+  preset.tracks[select_ch -1].offset = getEncoderPosition(0, 15, true);
+  if (preset.tracks[select_ch -1].offset >= 10){
       display.fillRect(68, 27, 13,9, SH110X_BLACK );
       display.setCursor(69, 28);
-      display.print(midiNotes(preset[value][select_ch - 1]));
+      display.print(preset.tracks[select_ch -1].offset);
   } else {
       display.fillRect(71, 27, 7,9, SH110X_BLACK );
       display.setCursor(72, 28);
-      display.print(midiNotes(preset[value][select_ch - 1]));
+      display.print(preset.tracks[select_ch -1].offset);
   }
 }
 
-void Bpm(int value){
+void Limit(){
   display.fillRect(68, 27, 13,9, SH110X_BLACK );
-  getEncoderPosition(0, 255, value, true);
-  FixCenterText(value);
+  preset.tracks[select_ch -1].limit = getEncoderPosition(0, 16, true);
+  if (preset.tracks[select_ch -1].limit >= 10){
+      display.fillRect(68, 27, 13,9, SH110X_BLACK );
+      display.setCursor(69, 28);
+      display.print(preset.tracks[select_ch -1].limit);
+  } else {
+      display.fillRect(71, 27, 7,9, SH110X_BLACK );
+      display.setCursor(72, 28);
+      display.print(preset.tracks[select_ch -1].limit);
+  }
+}
+
+void Note(){
+  display.fillRect(68, 27, 13,9, SH110X_BLACK );
+  preset.tracks[select_ch -1].note = getEncoderPosition(21, 108, true);
+  if (preset.tracks[select_ch -1].note >= 10){
+      display.fillRect(68, 27, 13,9, SH110X_BLACK );
+      display.setCursor(69, 28);
+      display.print(midiNotes(preset.tracks[select_ch -1].note));
+  } else {
+      display.fillRect(71, 27, 7,9, SH110X_BLACK );
+      display.setCursor(72, 28);
+      display.print(midiNotes(preset.tracks[select_ch -1].note));
+  }
+}
+
+void Bpm(){
+  display.fillRect(68, 27, 13,9, SH110X_BLACK );
+  preset.tracks[select_ch -1].bpm = getEncoderPosition(0, 255, true);
+  if (preset.tracks[select_ch -1].bpm >= 10){
+      display.fillRect(68, 27, 13,9, SH110X_BLACK );
+      display.setCursor(69, 28);
+      display.print(preset.tracks[select_ch -1].bpm);
+  } else {
+      display.fillRect(71, 27, 7,9, SH110X_BLACK );
+      display.setCursor(72, 28);
+      display.print(preset.tracks[select_ch -1].bpm);
+  }
 }
 
 // ***** ***** ***** *****
@@ -353,17 +414,17 @@ void Bpm(int value){
 //
 // ***** ***** ***** *****
 
-void ChanneAssignment(int value){
-   getEncoderPosition(1, 8, value, false);
+void ChannelAssignment(){
+   preset.tracks[select_ch -1].channel = getEncoderPosition(1, 8, true);
    int cursorX = 40;
    int cursorY = 15;
 
    for (int cursorpos = 1; cursorpos < 9; cursorpos++) {
         display.setCursor(cursorX, cursorY);
-        if (preset[4][cursorpos -1] == 0){
+        if (preset.tracks[select_ch -1].mute == 0){
             display.drawRect(cursorX-4, cursorY-4, 13,15, SH110X_WHITE);
         }
-        if (preset[6][select_ch - 1] == cursorpos){
+        if (preset.tracks[select_ch -1].channel == cursorpos){
             display.setTextColor(SH110X_BLACK);
             display.fillRect(cursorX-4, cursorY-4, 13,15, SH110X_WHITE);
             display.print(cursorpos);
@@ -380,32 +441,30 @@ void ChanneAssignment(int value){
     }
 }
 
-void GateTimer(int value){
+void GateTimer(){
   display.fillRect(68, 27, 13,9, SH110X_BLACK );
-  getEncoderPosition(0, 200, value, true);
-  //display.fillTriangle(27, 13, 31, 10, 31, 16, SH110X_WHITE);
+  preset.tracks[select_ch -1].gate = getEncoderPosition(0, 200, true);
   display.setTextSize(2);
   display.setCursor(40, 22);
-  display.print(preset[5][select_ch - 1]);
+  display.print(preset.tracks[select_ch -1].gate);
   display.println("/200");
   display.setTextSize(1);
 }
 
-void Velocity(int value){
-  getEncoderPosition(0, 127, value, true);
-  //display.fillTriangle(27, 23, 31, 20, 31, 26, SH110X_WHITE);
+void Velocity(){
+  preset.tracks[select_ch -1].velocity = getEncoderPosition(0, 127, true);
   display.drawLine(45, 32, 45, 40, SH110X_WHITE);
   display.drawLine(111, 32, 111, 40, SH110X_WHITE);
-  display.fillRect(47, 35, int(preset[7][select_ch -1]/2), 3, SH110X_WHITE);
+  display.fillRect(47, 35, int(preset.tracks[select_ch -1].velocity/2), 3, SH110X_WHITE);
   display.setTextSize(2);
-  if (preset[7][select_ch -1] < 10){
+  if (preset.tracks[select_ch -1].velocity < 10){
       display.setCursor(76, 5);
-  } else if (preset[7][select_ch -1] < 100){
+  } else if (preset.tracks[select_ch -1].velocity < 100){
       display.setCursor(68, 5);
-  } else if (preset[7][select_ch -1] < 1000){
+  } else if (preset.tracks[select_ch -1].velocity < 1000){
       display.setCursor(63, 5);
   }
-  display.print(preset[7][select_ch -1]);
+  display.print(preset.tracks[select_ch -1].velocity);
   display.setTextSize(1);
 }
 
@@ -421,15 +480,15 @@ int sort_desc(const void *cmp1, const void *cmp2)
   //return b - a;
 }
 
-void EachChannelNote(){
+void EachStepNote(){
   int index_list = 0;
-  int len = preset[0][select_ch - 1];
+  int len = preset.tracks[select_ch -1].step;
   int temp_list[len] = {};
   int offset_temp_x = 0;
 
   for (int temp_x = 0; temp_x < 16; temp_x ++) {
-    if (euc16[preset[0][select_ch -1]][temp_x] == 1){
-        offset_temp_x = temp_x + preset[1][select_ch -1];
+    if (euc16[preset.tracks[select_ch -1].step][temp_x] == 1){
+        offset_temp_x = temp_x + preset.tracks[select_ch -1].offset;
         while (offset_temp_x > 16){
            offset_temp_x = offset_temp_x - 16;
         }
@@ -447,7 +506,7 @@ void EachChannelNote(){
     display.setCursor(cursorX, cursorY);
     display.fillRect(cursorX-1, cursorY-1, 13,9, SH110X_WHITE);
     cursorX += 21;
-    Serial.println(x);
+    
     if (x == 3 || x == 7 || x == 11){
       cursorX = 37;
       cursorY += 18;
@@ -463,23 +522,23 @@ void menu1(int subPosition){
   switch (subPosition){
     case 1: //STEP
       display.fillTriangle(26, 3, 30, 0, 30, 6, SH110X_WHITE);
-      Step(0);
+      Step();
       break;
     case 2: //OFFSET
       display.fillTriangle(37, 13, 42, 10, 42, 16, SH110X_WHITE);
-      Offset(1);
+      Offset();
       break;
     case 3: //LIMIT
       display.fillTriangle(32, 23, 36, 20, 36, 26, SH110X_WHITE);
-      Limit(2);
+      Limit();
       break;
     case 4: //NOTE
       display.fillTriangle(26, 33, 30, 30, 30, 36, SH110X_WHITE);
-      Note(3);
+      Note();
       break;
     case 5: //BPM
       display.fillTriangle(19, 43, 23, 40, 23, 46, SH110X_WHITE);
-      Bpm(8);
+      Bpm();
       break;
   }
 }
@@ -488,20 +547,20 @@ void menu2(int subPosition){
   switch (subPosition){
     case 1: //CHANNEL
       display.fillTriangle(27, 3, 31, 0, 31, 6, SH110X_WHITE);
-      ChanneAssignment(6);
+      ChannelAssignment();
       display.fillTriangle(27, 3, 31, 0, 31, 6, SH110X_WHITE);
       break;
     case 2: //GATE
       display.fillTriangle(27, 13, 31, 10, 31, 16, SH110X_WHITE);
-      GateTimer(5);
+      GateTimer();
       break;
     case 3: //VELOCITY
       display.fillTriangle(27, 23, 31, 20, 31, 26, SH110X_WHITE);
-      Velocity(7);
+      Velocity();
       break;
     case 4: //EACH
       display.fillTriangle(27, 33, 31, 30, 31, 36, SH110X_WHITE);
-      EachChannelNote();
+      EachStepNote();
       break;
     case 5: //SIGN
       display.fillTriangle(27, 43, 31, 40, 31, 46, SH110X_WHITE);
@@ -553,6 +612,7 @@ void drawMenu(){
     case 1:
       drawStatics(0);
       menu1(encoderClickMenu(5, 1));
+      
       break;
     case 2:
       drawStatics(1);
@@ -593,7 +653,9 @@ void display_task(void *pvParameters){
     display.setTextSize(1);
     display.setTextColor(SH110X_BLACK, SH110X_WHITE);
     display.clearDisplay();
-
+    //display.fillTriangle(27, 3, 31, 0, 31, 6, SH110X_WHITE);
+    //display.display();
+    printf("foo");
     pinMode(PIN_ROTA, INPUT_PULLUP);
     pinMode(PIN_ROTB, INPUT_PULLUP);
     attachInterrupt(digitalPinToInterrupt(PIN_ROTA), checkPosition, CHANGE);
@@ -634,7 +696,8 @@ void display_task(void *pvParameters){
       display.clearDisplay();
       eventsRead();
       drawMenu();
+      
       display.display();
-      vTaskDelay(1);
+      //vTaskDelay();
     }
 }
