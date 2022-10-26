@@ -14,8 +14,8 @@
 #define OLED_CS       22
 #define OLED_RST      23
 #define PIN_SWITCH    0
-#define PIN_ROTA      17
-#define PIN_ROTB      18
+#define PIN_ROTA      18
+#define PIN_ROTB      17
 
 const int LED[8] = {1, 2, 4, 5, 7, 8, 10, 11};
 const int MENU_LED[4] = {3, 6, 9, 12};

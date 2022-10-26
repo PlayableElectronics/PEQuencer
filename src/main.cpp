@@ -1,13 +1,4 @@
-#include <FreeRTOS.h>
-#include <task.h>
-#include <queue.h>
-#include <semphr.h>
-#include <stdio.h>
-#include "pico/stdlib.h"
-#include <stdlib.h>
-#include "rgb.h"
-//#include "oled.h"
-#include "ui/ui.h"
+#include "defs.h"
 
 struct Track {
   uint step;
@@ -18,15 +9,32 @@ struct Track {
   uint gate;
   uint channel;
   uint velocity;
-  uint bpm;
+  float bpm;
 };
 
 struct Preset {
   struct Track tracks[16];
 };
 
-struct Track track;
 struct Preset preset2;
+
+struct Note {
+  uint state;
+  uint channel;
+  uint pitch;
+  int  shift;
+  uint velocity;
+  uint length;
+};
+
+struct NoteSet {
+  uint gates[16];
+  //uint states[16];
+  //struct Note tracks[16];
+};
+
+struct Note note;
+struct NoteSet noteset;
 
 const uint LED_PIN = 13;//PICO_DEFAULT_LED_PIN;
 static QueueHandle_t xClock, xSeq, xNoteOn  = NULL;
@@ -48,60 +56,44 @@ void clock_task(void *pvParameters) {
     }
     step++;
     if (step>=16) step=0;
-    vTaskDelay(pdMS_TO_TICKS(30));
+    vTaskDelay(pdMS_TO_TICKS((60.0/preset2.tracks[0].bpm)*50.0));
   }
 }
 
 void seq_task(void *pvParameters){
     uint step;
-    uint notes[16];
-    uint seq[16][16]={
-      {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-      {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-      {0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-      {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-      {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-      {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-      {0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-      {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-      {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-      {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-      {0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-      {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-      {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-      {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-      {0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-      {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
-    };
     while(true){
         xQueueReceive(xClock, &step, portMAX_DELAY);
-        printf("%i\n", step);
-        notes[0]=1;
-        xQueueSend(xNoteOn, &notes, 0U);
-        //noteset.gates=seq[step];
-        /*
+        struct NoteSet noteset;
         if(step==0){
-            noteset.gates[0]=1;
-            printf("foo\n");
+            noteset.gates[0]=2;
+            noteset.gates[1]=2;
+            noteset.gates[2]=0;
+            noteset.gates[3]=2;
+            noteset.gates[4]=2;
+            noteset.gates[5]=0;
+            noteset.gates[6]=2;
+            noteset.gates[7]=2;
+            noteset.gates[8]=0;
+            noteset.gates[9]=2;
+            noteset.gates[10]=2;
+            noteset.gates[11]=0;
         }
-        if(step==1){
-            noteset.gates[0]=0;
-            printf("bar\n");
-        }*/
-        //if(seq[step]!=0){
-        //  for(int i =0;i<16;i++){
-        //      noteset.leds[i]=(seq[step] >> 15-i) & 1;
-        //  }
-        //}
+        for(int i =0;i<16;i++){
+          if(noteset.gates[i]!=0){
+            noteset.gates[i]--;
+          }
+        }
+        xQueueSend(xNoteOn, &noteset, 0U);
     }
 }
 
 void noteon_task(void *pvParameters){
-    uint notes[16];
+    struct NoteSet noteset;
     while(true){
-        xQueueReceive(xNoteOn, &notes, portMAX_DELAY);
+        xQueueReceive(xNoteOn, &noteset, portMAX_DELAY);
         for(int i=0;i<12;i++){
-          if(notes[i]==1){
+          if(noteset.gates[i]!=0){
             put_pixel(0x0c0c0c);
           }
           else {
@@ -141,11 +133,12 @@ void ch2_task(void *pvParameters){
 }*/
 
 int main() {
+    preset2.tracks[0].bpm = 128;
     stdio_init_all();
     rgb_init();
     //task
-    uint notes[16];
     xClock = xQueueCreate(1, sizeof(uint));
+    xNoteOn = xQueueCreate(1, sizeof(noteset));
     //xSemaphoreUI = xSemaphoreCreateBinary();
     //xNoteOn = xQueueCreate(1, sizeof(notes));
     //xSeq = xQueueCreate(1, 256);
@@ -156,11 +149,8 @@ int main() {
     //xTaskCreate(send_task, "send", 256, NULL, 1, NULL);
     //xTaskCreate(send_task1, "send", 256, NULL, 1, NULL);
     xTaskCreate(clock_task, "clock", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
-    //xTaskCreate(seq_task, "seq", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
-    //xTaskCreate(noteon_task, "note", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
-    //xTaskCreate(noteoff_task, "noteoff", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
-    //xTaskCreate(note1_task, "note1", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
-    //xTaskCreate(ch2_task, "note1", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
+    xTaskCreate(seq_task, "seq", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
+    xTaskCreate(noteon_task, "note", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
     xTaskCreate(display_task, "display", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
     vTaskStartScheduler();
 
