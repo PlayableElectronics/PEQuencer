@@ -1,10 +1,10 @@
 #include <Arduino.h>
 #include <Adafruit_SH110X.h>
-//#include <Adafruit_NeoPixel.h>
 #include <RotaryEncoder.h>
 //#include <Adafruit_TinyUSB.h>
 //#include <MIDI.h>
 #include <EasyButton.h>
+//?? #include "pgmspace.h"
 
 #define NUM_NEOPIXEL  12
 #define PIN_NEOPIXEL  19

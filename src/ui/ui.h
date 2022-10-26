@@ -19,7 +19,7 @@ struct Preset {
 struct Track track;
 struct Preset preset;
 
-int eachNote[8][16] = {
+int eachNote[16][16] = {
  {48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48},
  {48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48},
  {48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48},
@@ -30,15 +30,13 @@ int eachNote[8][16] = {
  {48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48}
 };
 
-unsigned long gate_timer = 0; //countermeasure of sw chattering
-
 // Sequence variable
 byte buf_count = 0;
 byte line_xbuf[17];//Buffer for drawing lines
 byte line_ybuf[17];//Buffer for drawing lines
 
 // Global variables store
-byte playing_step[8] = {0, 0, 0, 0, 0, 0, 0, 0}; //playing step number , CH1,2,3,4,5,6
+byte playing_step[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; //playing step number , CH1,2,3,4,5,6
 
 // Menu Positions
 int j = 0;
@@ -66,13 +64,8 @@ int debounce = 5;
 //   {132, 132, 132, 132, 132, 132, 132, 132}          // BPM
 // };
 
-bool offset_buf[8][16];//offset buffer , Stores the offset result
+bool offset_buf[16][16];//offset buffer , Stores the offset result
 int select_ch = 1; //0~5 = each channel -1 , 6 = random mode
-float BPM = 132.0;
-
-// Timer
-int t1 = 0;
-int t2 = 0;
 
 EasyButton button1(LED[0], debounce, true, false);
 EasyButton button2(LED[1], debounce, true, false);
@@ -88,9 +81,7 @@ EasyButton menu_button3(MENU_LED[2], debounce, true, false);
 EasyButton menu_button4(MENU_LED[3], debounce, true, false);
 EasyButton encoderButton(PIN_SWITCH, debounce, true, false);
 
-//Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUM_NEOPIXEL, PIN_NEOPIXEL, NEO_GRB + NEO_KHZ800);
 Adafruit_SH1106G display = Adafruit_SH1106G(128, 64,OLED_MOSI, OLED_CLK, OLED_DC, OLED_RST, OLED_CS);
-//RotaryEncoder encoder2(21, 20, RotaryEncoder::LatchMode::FOUR3);
 RotaryEncoder encoder(PIN_ROTB, PIN_ROTA, RotaryEncoder::LatchMode::FOUR3);
 //Adafruit_USBD_MIDI usb_midi;
 //MIDI_CREATE_INSTANCE(Adafruit_USBD_MIDI, usb_midi, usbMIDI);
@@ -221,20 +212,20 @@ int getEncoderPosition(int ROTARYMIN, int ROTARYMAX, bool JUMP_TO){
           newPos = ROTARYMAX;
           encoder.setPosition(ROTARYMAX);
         }
-    
+
     }
     return newPos;
 }
 
 // Draw statics lines and dots
 void drawStatics(int current_page){
-  
+
   display.setTextColor(SH110X_WHITE);
   for (int m = 0; m < 5; m++) {
     display.setCursor(0, m*10);
     display.print(menus[current_page][m]);
   }
-  
+
   display.fillRect(0, 53, 9, 12, SH110X_WHITE);
   if (preset.tracks[select_ch -1].mute == 0){
       display.fillRect(0, 53, 40, 12, SH110X_WHITE);
@@ -251,11 +242,13 @@ void drawStatics(int current_page){
   }
   display.setTextColor(SH110X_WHITE);
   for(int i = 0; i < 4; i++){
+    ccolors[MENU_LED[i]-1]=0xF;
     //pixels.setPixelColor(MENU_LED[i]-1, 0x001F00);
   }
+  ccolors[MENU_LED[current_page]-1]=0x00FF00;
   //pixels.setPixelColor(MENU_LED[current_page]-1, 0x00FF00);
   if (current_page == 0){
-    
+
     for (int x = 0; x < 8; x++){
     if (x == select_ch -1){
       buf_count = 0;
@@ -278,7 +271,7 @@ void drawStatics(int current_page){
     }
   }
 
-
+  //draw step dot
     for (int j = 0; j <= preset.tracks[select_ch -1].limit; j++) { // j = steps
       display.drawPixel(x16[j], y16[j], SH110X_WHITE);
     }
@@ -314,8 +307,9 @@ void selectChannel(int channel){
   if (channel == select_ch){
     preset.tracks[select_ch -1].mute = !preset.tracks[select_ch -1].mute;
   } else{
-    fixEncoderMenu(channel);
+    //dg fixEncoderMenu(channel);
   }
+  fixEncoderMenu(channel); //dg
   select_ch = channel;
 }
 
@@ -430,6 +424,7 @@ void ChannelAssignment(){
             display.print(cursorpos);
         } else {
             //pixels.setPixelColor(2, 0x000000);
+            ccolors[2] = 0x000000;
             display.setTextColor(SH110X_WHITE);
             display.print(cursorpos);
         }
@@ -506,7 +501,7 @@ void EachStepNote(){
     display.setCursor(cursorX, cursorY);
     display.fillRect(cursorX-1, cursorY-1, 13,9, SH110X_WHITE);
     cursorX += 21;
-    
+
     if (x == 3 || x == 7 || x == 11){
       cursorX = 37;
       cursorY += 18;
@@ -607,12 +602,10 @@ void menu4(int subPosition){
 }
 
 void drawMenu(){
-
   switch(menuPosition){
     case 1:
       drawStatics(0);
       menu1(encoderClickMenu(5, 1));
-      
       break;
     case 2:
       drawStatics(1);
@@ -653,9 +646,7 @@ void display_task(void *pvParameters){
     display.setTextSize(1);
     display.setTextColor(SH110X_BLACK, SH110X_WHITE);
     display.clearDisplay();
-    //display.fillTriangle(27, 3, 31, 0, 31, 6, SH110X_WHITE);
-    //display.display();
-    printf("foo");
+
     pinMode(PIN_ROTA, INPUT_PULLUP);
     pinMode(PIN_ROTB, INPUT_PULLUP);
     attachInterrupt(digitalPinToInterrupt(PIN_ROTA), checkPosition, CHANGE);
@@ -696,8 +687,7 @@ void display_task(void *pvParameters){
       display.clearDisplay();
       eventsRead();
       drawMenu();
-      
       display.display();
-      //vTaskDelay();
+      vTaskDelay(1);
     }
 }

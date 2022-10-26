@@ -1,161 +1,97 @@
 #include "defs.h"
 
-struct Track {
-  uint step;
-  uint offset;
-  uint limit;
-  int  note;
-  uint mute;
-  uint gate;
-  uint channel;
-  uint velocity;
-  float bpm;
-};
-
-struct Preset {
-  struct Track tracks[16];
-};
-
-struct Preset preset2;
-
-struct Note {
-  uint state;
-  uint channel;
-  uint pitch;
-  int  shift;
-  uint velocity;
-  uint length;
-};
-
-struct NoteSet {
-  uint gates[16];
-  //uint states[16];
-  //struct Note tracks[16];
-};
-
-struct Note note;
-struct NoteSet noteset;
-
-const uint LED_PIN = 13;//PICO_DEFAULT_LED_PIN;
-static QueueHandle_t xClock, xSeq, xNoteOn  = NULL;
-
-//SemaphoreHandle_t xSemaphoreUI;
-
 void clock_task(void *pvParameters) {
-  gpio_init(LED_PIN);
-  gpio_set_dir(LED_PIN, GPIO_OUT);
+  gpio_init(13);
+  gpio_set_dir(13, GPIO_OUT);
   //tbd groove
   int step = 0;
   while (true) {
     xQueueSend(xClock, &step, 0U);
     if (step%16==0){
-      gpio_put(LED_PIN, 1);
+      gpio_put(13, 1);
     }
     else{
-      gpio_put(LED_PIN, 0);
+      gpio_put(13, 0);
     }
     step++;
-    if (step>=16) step=0;
-    vTaskDelay(pdMS_TO_TICKS((60.0/preset2.tracks[0].bpm)*50.0));
+    if (step>=256) step=0;
+    vTaskDelay(pdMS_TO_TICKS((60.0/preset.tracks[0].bpm)*60.0));
   }
 }
 
-void seq_task(void *pvParameters){
+void step_task(void *pvParameters){
     uint step;
+    uint gates[16];
     while(true){
         xQueueReceive(xClock, &step, portMAX_DELAY);
-        struct NoteSet noteset;
-        if(step==0){
-            noteset.gates[0]=2;
-            noteset.gates[1]=2;
-            noteset.gates[2]=0;
-            noteset.gates[3]=2;
-            noteset.gates[4]=2;
-            noteset.gates[5]=0;
-            noteset.gates[6]=2;
-            noteset.gates[7]=2;
-            noteset.gates[8]=0;
-            noteset.gates[9]=2;
-            noteset.gates[10]=2;
-            noteset.gates[11]=0;
-        }
-        for(int i =0;i<16;i++){
-          if(noteset.gates[i]!=0){
-            noteset.gates[i]--;
+        /*
+        for (int k = 0; k < 8; k++){
+          if (offset_buf[k-1][playing_step[k-1]] == 1 && preset[4][k-1] == 1 && k == select_ch) {
+            usbMIDI.sendNoteOn(eachNote[select_ch][playing_step[k]], preset[7][k], preset[6][k]);
+            pixels.setPixelColor(LED[k -1]-1, 0xFFFFFF);
+            if (gate_timer + (unsigned int)preset[5][k] <= millis()) {
+              usbMIDI.sendNoteOff(eachNote[select_ch][playing_step[k]], preset[7][k], preset[6][k]);
+            }
+          }
+          else if (offset_buf[k][playing_step[k - 1 ]] == 1 && preset[4][k - 1] == 1) {
+            usbMIDI.sendNoteOn(eachNote[select_ch][k], preset[7][k], preset[6][k]);
+            pixels.setPixelColor(LED[k -1]-1, 0x1F1F1F);
+            if (gate_timer + (unsigned int)preset[5][k - 1] <= millis()) {
+              usbMIDI.sendNoteOff(eachNote[select_ch][playing_step[k]], preset[7][k], preset[6][k]);
+            }
+          }
+          else if(preset[4][k - 1] == 0 && k == select_ch){
+            usbMIDI.sendNoteOff(eachNote[select_ch][playing_step[k]], preset[7][k], preset[6][k]);
+            pixels.setPixelColor(LED[k - 1]-1, 0xFF0000);
+          }
+          else if(preset[4][k - 1] == 0){
+            usbMIDI.sendNoteOff(eachNote[select_ch][playing_step[k]], preset[7][k], preset[6][k]);
+            pixels.setPixelColor(LED[k - 1]-1, 0x1F0000);
+          }
+          else{
+            pixels.setPixelColor(LED[k - 1]-1, 0x0);
           }
         }
-        xQueueSend(xNoteOn, &noteset, 0U);
+        */
+        for(int i =0;i<16;i++){
+          playing_step[i]++;
+          if (playing_step[i] >= preset.tracks[i].limit) {
+              playing_step[i] = 0;
+          }
+          if(step%16==0) gates[i] = preset.tracks[i].gate+1;
+          if(gates[i]!=0) gates[i]--; //decrement gates
+        }
+        xQueueSend(xNote, &gates, 0U);
+        rgb_update();
     }
 }
 
-void noteon_task(void *pvParameters){
-    struct NoteSet noteset;
+void note_task(void *pvParameters){
+    uint channel_led[8] = {0,1,3,4,6,7,9,10};
+    uint gates[16];
     while(true){
-        xQueueReceive(xNoteOn, &noteset, portMAX_DELAY);
-        for(int i=0;i<12;i++){
-          if(noteset.gates[i]!=0){
-            put_pixel(0x0c0c0c);
+        xQueueReceive(xNote, &gates, portMAX_DELAY);
+        for(int i=0;i<8;i++){
+          if(gates[i]!=0){
+            ccolors[channel_led[i]] = 0x0c0c0c;
           }
           else {
-            put_pixel(0);
+            ccolors[channel_led[i]] = 0;
           }
         }
     }
 }
-/*
-void noteoff_task(void *pvParameters){
-    struct Note note;
-    while(true){
-        xQueueReceive(xNoteOff, &note, 1000);
-        set_pixel(note.channel, 0);
-    }
-}*/
-
-/*
-void ch1_task(void *pvParameters){
-    while(true){
-        if(xSemaphoreTake(ch1, (TickType_t) 10) == pdTRUE){
-          ccolors[0] = 0xFFFFFF;
-          vTaskDelay(10);
-          ccolors[0] = 0;
-        }
-    }
-}
-
-void ch2_task(void *pvParameters){
-    while(true){
-        if(xSemaphoreTake(ch2, (TickType_t) 10) == pdTRUE){
-          ccolors[1] = 0xFFFFFF;
-          vTaskDelay(10);
-          ccolors[1] = 0;
-        }
-    }
-}*/
 
 int main() {
-    preset2.tracks[0].bpm = 128;
+    preset.tracks[0].bpm = 128;
     stdio_init_all();
-    stdio_uart_init_full(uart1, 115200, 20, 21);
+    stdio_uart_init_full(uart1, 115200, 20, 21); //debug via stemma
     rgb_init();
-    //task
     xClock = xQueueCreate(1, sizeof(uint));
-    xNoteOn = xQueueCreate(1, sizeof(noteset));
-    //xSemaphoreUI = xSemaphoreCreateBinary();
-    //xNoteOn = xQueueCreate(1, sizeof(notes));
-    //xSeq = xQueueCreate(1, 256);
-    //xTaskCreate(led_task, "LED_Task", 256, NULL, 1, NULL);
-    //xTaskCreate(oled_task, "OLED_Task", 256, NULL, 1, NULL);
-    //xTaskCreate(channel_task, "RGB_Task1", 256, (void *) ch1, 1, NULL);
-    //xTaskCreate(channel_task, "RGB_Task2", 256, (void *) ch3, 1, NULL);
-    //xTaskCreate(send_task, "send", 256, NULL, 1, NULL);
-    //xTaskCreate(send_task1, "send", 256, NULL, 1, NULL);
-    
+    xNote = xQueueCreate(1, sizeof(uint[16]));
     xTaskCreate(clock_task, "clock", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
-    xTaskCreate(seq_task, "seq", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
-    xTaskCreate(noteon_task, "note", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
+    xTaskCreate(step_task, "step", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
+    xTaskCreate(note_task, "note", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
     xTaskCreate(display_task, "display", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
     vTaskStartScheduler();
-    //display_task();
-    while(1){
-    };
 }
