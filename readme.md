@@ -1,5 +1,16 @@
 #path
-export PICO_SDK_PATH="$HOME/Repos/pico-sdk"
+git clone https://github.com/raspberrypi/pico-sdk
+export PICO_SDK_PATH="$HOME/[repos dir]/pico-sdk"
+
+#Pico arduino compat
+git clone https://github.com/fhdm-dev/pico-arduino-compat.git
+
+cd pico-arduino-compat
+git submodule update --init arduino-compat/arduino-pico
+
+./libs/adafruit-sh110x/init.sh
+./libs/rotaryencoder/init.sh
+./libs/easybutton/init.sh
 
 #build
 mkdir build
