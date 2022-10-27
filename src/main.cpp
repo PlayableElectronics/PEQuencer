@@ -24,41 +24,15 @@ void step_task(void *pvParameters){
     uint gates[16];
     while(true){
         xQueueReceive(xClock, &step, portMAX_DELAY);
-        /*
-        for (int k = 0; k < 8; k++){
-          if (offset_buf[k-1][playing_step[k-1]] == 1 && preset[4][k-1] == 1 && k == select_ch) {
-            usbMIDI.sendNoteOn(eachNote[select_ch][playing_step[k]], preset[7][k], preset[6][k]);
-            pixels.setPixelColor(LED[k -1]-1, 0xFFFFFF);
-            if (gate_timer + (unsigned int)preset[5][k] <= millis()) {
-              usbMIDI.sendNoteOff(eachNote[select_ch][playing_step[k]], preset[7][k], preset[6][k]);
-            }
-          }
-          else if (offset_buf[k][playing_step[k - 1 ]] == 1 && preset[4][k - 1] == 1) {
-            usbMIDI.sendNoteOn(eachNote[select_ch][k], preset[7][k], preset[6][k]);
-            pixels.setPixelColor(LED[k -1]-1, 0x1F1F1F);
-            if (gate_timer + (unsigned int)preset[5][k - 1] <= millis()) {
-              usbMIDI.sendNoteOff(eachNote[select_ch][playing_step[k]], preset[7][k], preset[6][k]);
-            }
-          }
-          else if(preset[4][k - 1] == 0 && k == select_ch){
-            usbMIDI.sendNoteOff(eachNote[select_ch][playing_step[k]], preset[7][k], preset[6][k]);
-            pixels.setPixelColor(LED[k - 1]-1, 0xFF0000);
-          }
-          else if(preset[4][k - 1] == 0){
-            usbMIDI.sendNoteOff(eachNote[select_ch][playing_step[k]], preset[7][k], preset[6][k]);
-            pixels.setPixelColor(LED[k - 1]-1, 0x1F0000);
-          }
-          else{
-            pixels.setPixelColor(LED[k - 1]-1, 0x0);
-          }
-        }
-        */
         for(int i =0;i<16;i++){
+          if (offset_buf[i][playing_step[i]] == 1 && preset.tracks[i].mute == 1) {
+            gates[i] = preset.tracks[i].gate+1;
+          }
           playing_step[i]++;
           if (playing_step[i] >= preset.tracks[i].limit) {
               playing_step[i] = 0;
           }
-          if(step%16==0) gates[i] = preset.tracks[i].gate+1;
+          //if(step%16==0) gates[i] = preset.tracks[i].gate+1;
           if(gates[i]!=0) gates[i]--; //decrement gates
         }
         xQueueSend(xNote, &gates, 0U);
@@ -73,7 +47,12 @@ void note_task(void *pvParameters){
         xQueueReceive(xNote, &gates, portMAX_DELAY);
         for(int i=0;i<8;i++){
           if(gates[i]!=0){
-            ccolors[channel_led[i]] = 0x0c0c0c;
+            if(i==select_ch-1 ){
+              ccolors[channel_led[i]] = 0xffffff;
+            }
+            else{
+              ccolors[channel_led[i]] = 0x0c0c0c;
+            }
           }
           else {
             ccolors[channel_led[i]] = 0;
