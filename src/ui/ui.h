@@ -9,26 +9,27 @@ struct Track {
   uint gate;
   uint channel;
   uint velocity;
-  uint bpm;
+  uint stepNote[16];
 };
 
 struct Preset {
   struct Track tracks[16];
+  uint bpm;
 };
 
 struct Track track;
 struct Preset preset;
 
-int eachNote[16][16] = {
- {48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48},
- {48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48},
- {48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48},
- {48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48},
- {48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48},
- {48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48},
- {48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48},
- {48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48}
-};
+// int stepNote[16][16] = {
+//  {48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48},
+//  {48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48},
+//  {48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48},
+//  {48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48},
+//  {48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48},
+//  {48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48},
+//  {48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48},
+//  {48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48}
+// };
 
 // Sequence variable
 byte buf_count = 0;
@@ -104,7 +105,7 @@ void fixEncoderMenu(int channel){
             encoder.setPosition(preset.tracks[channel -1].note);
             break;
           case 5:
-            encoder.setPosition(preset.tracks[channel -1].bpm);
+            encoder.setPosition(preset.bpm);
             break;
         }
         break;
@@ -160,7 +161,8 @@ void fixEncoderMenu(int channel){
 String midiNotes(int noteNumber){
     byte octave = noteNumber / 12;
     byte noteInOctave = noteNumber % 12;
-    return *noteNames[noteInOctave] + String(octave - 1);
+    //displayNoteNames = noteString[midinote%12]+String((midiNote/12)-1,DEC);
+    return noteNames[noteNumber % 12] + String((octave/12), DEC);
 }
 
 // Get subMenu position
@@ -232,7 +234,7 @@ void drawStatics(int current_page){
       display.setTextColor(SH110X_BLACK);
       display.setCursor(2, 55);
       display.print(select_ch);
-      display.setCursor(9, 55);
+      display.setCursor(9, 55);      
       display.print("MUTED");
   } else {
       display.fillRect(0, 53, 9, 12, SH110X_WHITE);
@@ -272,15 +274,36 @@ void drawStatics(int current_page){
   }
 
   //draw step dot
-    for (int j = 0; j <= preset.tracks[select_ch -1].limit; j++) { // j = steps
+    for (int j = 0; j < preset.tracks[select_ch -1].limit; j++) { // j = steps
       display.drawPixel(x16[j], y16[j], SH110X_WHITE);
     }
+
+
+    if (offset_buf[select_ch -1][playing_step[select_ch -1]] == 0) {
+        display.drawCircle(x16[playing_step[select_ch -1]], y16[playing_step[select_ch -1]], 2, SH110X_WHITE);
+    }
+    
+    if (offset_buf[select_ch -1][playing_step[select_ch -1]] == 1 && preset.tracks[select_ch -1].mute == 0) {
+        display.fillCircle(x16[playing_step[select_ch -1]], y16[playing_step[select_ch -1]], 3, SH110X_WHITE);
+    }
+    
+    if (preset.tracks[select_ch -1].mute == 0) {
+        display.drawCircle(x16[playing_step[select_ch -1]], y16[playing_step[select_ch -1]], 2, SH110X_WHITE);
+    }
+
+
     if (preset.tracks[select_ch -1].step > 1){
       for (j = 0; j < buf_count - 1; j++) {
         display.drawLine(line_xbuf[j], line_ybuf[j], line_xbuf[j + 1], line_ybuf[j + 1], SH110X_WHITE);
       }
       display.drawLine(line_xbuf[0], line_ybuf[0], line_xbuf[j], line_ybuf[j], SH110X_WHITE);
-  }
+    } if (preset.tracks[select_ch -1].step == 1) {
+      if (preset.tracks[select_ch -1].offset != 16 && preset.tracks[select_ch -1].offset != 0){
+        display.drawLine(74, 32, x16[sizeof(x16) - preset.tracks[select_ch -1].offset], y16[sizeof(y16) - preset.tracks[select_ch -1].offset], SH110X_WHITE);
+      } else {
+        display.drawLine(74, 32, x16[0], y16[0], SH110X_WHITE);
+      }
+    } 
   }
 }
 
@@ -334,16 +357,15 @@ void eventsRead(){
 
 void Step(){
   display.fillRect(68, 27, 13,9, SH110X_BLACK );
-  preset.tracks[select_ch -1].step = getEncoderPosition(0, 16, true);
+  preset.tracks[select_ch -1].step = getEncoderPosition(0, 16, false);
   if (preset.tracks[select_ch -1].step >= 10){
       display.fillRect(68, 27, 13,9, SH110X_BLACK );
       display.setCursor(69, 28);
-      display.print(preset.tracks[select_ch -1].step);
   } else {
       display.fillRect(71, 27, 7,9, SH110X_BLACK );
       display.setCursor(72, 28);
-      display.print(preset.tracks[select_ch -1].step);
   }
+  display.print(preset.tracks[select_ch -1].step);
 }
 
 void Offset(){
@@ -352,26 +374,24 @@ void Offset(){
   if (preset.tracks[select_ch -1].offset >= 10){
       display.fillRect(68, 27, 13,9, SH110X_BLACK );
       display.setCursor(69, 28);
-      display.print(preset.tracks[select_ch -1].offset);
   } else {
       display.fillRect(71, 27, 7,9, SH110X_BLACK );
       display.setCursor(72, 28);
-      display.print(preset.tracks[select_ch -1].offset);
   }
+  display.print(preset.tracks[select_ch -1].offset);
 }
 
 void Limit(){
   display.fillRect(68, 27, 13,9, SH110X_BLACK );
-  preset.tracks[select_ch -1].limit = getEncoderPosition(0, 16, true);
+  preset.tracks[select_ch -1].limit = getEncoderPosition(0, 16, false);
   if (preset.tracks[select_ch -1].limit >= 10){
       display.fillRect(68, 27, 13,9, SH110X_BLACK );
       display.setCursor(69, 28);
-      display.print(preset.tracks[select_ch -1].limit);
   } else {
       display.fillRect(71, 27, 7,9, SH110X_BLACK );
       display.setCursor(72, 28);
-      display.print(preset.tracks[select_ch -1].limit);
   }
+  display.print(preset.tracks[select_ch -1].limit);
 }
 
 void Note(){
@@ -380,26 +400,26 @@ void Note(){
   if (preset.tracks[select_ch -1].note >= 10){
       display.fillRect(68, 27, 13,9, SH110X_BLACK );
       display.setCursor(69, 28);
-      display.print(midiNotes(preset.tracks[select_ch -1].note));
   } else {
       display.fillRect(71, 27, 7,9, SH110X_BLACK );
       display.setCursor(72, 28);
-      display.print(midiNotes(preset.tracks[select_ch -1].note));
   }
+  String noteName = midiNotes(preset.tracks[select_ch -1].note);
+  printf("%d", noteName);
+  display.print(noteName);
 }
 
 void Bpm(){
   display.fillRect(68, 27, 13,9, SH110X_BLACK );
-  preset.tracks[select_ch -1].bpm = getEncoderPosition(0, 255, true);
-  if (preset.tracks[select_ch -1].bpm >= 10){
-      display.fillRect(68, 27, 13,9, SH110X_BLACK );
-      display.setCursor(69, 28);
-      display.print(preset.tracks[select_ch -1].bpm);
-  } else {
-      display.fillRect(71, 27, 7,9, SH110X_BLACK );
-      display.setCursor(72, 28);
-      display.print(preset.tracks[select_ch -1].bpm);
+  preset.bpm = getEncoderPosition(0, 255, true);
+  if (preset.bpm > 0 && preset.bpm < 10){
+    display.setCursor(72, 28);
+  } else if (preset.bpm > 9 && preset.bpm < 100){
+    display.setCursor(69, 28);
+  } else if (preset.bpm >= 100){
+    display.setCursor(66, 28);
   }
+  display.print(preset.bpm);
 }
 
 // ***** ***** ***** *****
@@ -409,31 +429,38 @@ void Bpm(){
 // ***** ***** ***** *****
 
 void ChannelAssignment(){
-   preset.tracks[select_ch -1].channel = getEncoderPosition(1, 8, true);
+   preset.tracks[select_ch -1].channel = getEncoderPosition(1, 8, false);
    int cursorX = 40;
-   int cursorY = 15;
+   int cursorY = 10;
 
    for (int cursorpos = 1; cursorpos < 9; cursorpos++) {
         display.setCursor(cursorX, cursorY);
-        if (preset.tracks[select_ch -1].mute == 0){
+        if (preset.tracks[cursorpos -1].mute == 0){
             display.drawRect(cursorX-4, cursorY-4, 13,15, SH110X_WHITE);
+            //display.drawLine(cursorX-4, cursorY-4, cursorX-4+12, cursorY-4+14, SH110X_WHITE);
         }
         if (preset.tracks[select_ch -1].channel == cursorpos){
             display.setTextColor(SH110X_BLACK);
             display.fillRect(cursorX-4, cursorY-4, 13,15, SH110X_WHITE);
-            display.print(cursorpos);
         } else {
             //pixels.setPixelColor(2, 0x000000);
             ccolors[2] = 0x000000;
             display.setTextColor(SH110X_WHITE);
-            display.print(cursorpos);
         }
+        display.print(cursorpos);
         if (cursorpos == 4){
             cursorX = 17;
             cursorY += 20;
         }
         cursorX += 23;
     }
+    display.fillRect(59, 50, 36,13, SH110X_WHITE);
+    display.fillTriangle(72, 53, 72, 59, 81, 56, SH110X_BLACK);
+    display.setTextColor(SH110X_BLACK);
+    display.setCursor(63, 53);
+    display.print(select_ch);
+    display.setCursor(86, 53);
+    display.print(preset.tracks[select_ch -1].channel);
 }
 
 void GateTimer(){
@@ -470,7 +497,7 @@ int sort_desc(const void *cmp1, const void *cmp2)
   int a = *((int *)cmp1);
   int b = *((int *)cmp2);
   // The comparison
-  return a > b ? -1 : (a < b ? 1 : 0);
+  return a < b ? -1 : (a > b ? 1 : 0);
   // A simpler, probably faster way:
   //return b - a;
 }
@@ -487,6 +514,7 @@ void EachStepNote(){
         while (offset_temp_x > 16){
            offset_temp_x = offset_temp_x - 16;
         }
+        offset_temp_x = 16 - offset_temp_x;
         temp_list[index_list] = offset_temp_x;
         index_list++;
     }
@@ -496,10 +524,20 @@ void EachStepNote(){
 
   int cursorX = 37;
   int cursorY = 2;
-
+  if (len == 0){
+    display.setCursor(51, 28);
+    display.fillRect(50, 27, 55, 9, SH110X_WHITE);
+    display.setTextColor(SH110X_BLACK);
+    display.print("ADD STEPS");
+  }
   for(int x = 0; x < len; x++){
-    display.setCursor(cursorX, cursorY);
+
     display.fillRect(cursorX-1, cursorY-1, 13,9, SH110X_WHITE);
+
+    display.setCursor(cursorX, cursorY);
+    display.setTextColor(SH110X_BLACK);
+    display.print(temp_list[x]);
+
     cursorX += 21;
 
     if (x == 3 || x == 7 || x == 11){
@@ -516,6 +554,7 @@ void EachStepNote(){
 void menu1(int subPosition){
   switch (subPosition){
     case 1: //STEP
+      
       display.fillTriangle(26, 3, 30, 0, 30, 6, SH110X_WHITE);
       Step();
       break;
