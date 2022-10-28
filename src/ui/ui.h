@@ -224,18 +224,28 @@ int getEncoderPosition(int ROTARYMIN, int ROTARYMAX, bool JUMP_TO){
 void drawStatics(int current_page){
   display.setTextColor(SH110X_WHITE);
   for (int m = 0; m < 5; m++) {
-    display.setCursor(0, m*10);
+    if(subMenuPosition == m + 1){
+      display.fillRect(0,m*10, 35, 11, SH110X_WHITE);
+      display.setTextColor(SH110X_BLACK);
+    } else{
+      display.setTextColor(SH110X_WHITE);
+    }
+    display.setCursor(1, m*10+2);
     display.print(menus[current_page][m]);
+    
   }
-
+  // Draw left margin line
+  display.drawLine(34,0, 34 ,64, SH110X_WHITE);
+  
   display.fillRect(0, 53, 9, 12, SH110X_WHITE);
   if (preset.tracks[select_ch -1].mute == 0){
-      display.fillRect(0, 53, 40, 12, SH110X_WHITE);
+      display.fillRect(0, 53, 35, 12, SH110X_WHITE);
+      
       display.setTextColor(SH110X_BLACK);
       display.setCursor(2, 55);
       display.print(select_ch);
       display.setCursor(9, 55);      
-      display.print("MUTED");
+      display.print("MUTE");
   } else {
       display.fillRect(0, 53, 9, 12, SH110X_WHITE);
       display.setTextColor(SH110X_BLACK);
@@ -483,7 +493,14 @@ void GateTimer(){
   display.fillRect(68, 27, 13,9, SH110X_BLACK );
   preset.tracks[select_ch -1].gate = getEncoderPosition(0, 200, true);
   display.setTextSize(2);
-  display.setCursor(40, 22);
+  if (preset.tracks[select_ch -1].gate >= 0 and preset.tracks[select_ch -1].gate <= 9){
+    display.setCursor(47, 22);
+  } else if (preset.tracks[select_ch -1].gate >= 10 and preset.tracks[select_ch -1].gate <= 99){
+    display.setCursor(41, 22);
+  } else if (preset.tracks[select_ch -1].gate >= 99 and preset.tracks[select_ch -1].gate <= 201){
+    display.setCursor(35, 22);
+  }
+  
   display.print(preset.tracks[select_ch -1].gate);
   display.println("/200");
   display.setTextSize(1);
@@ -491,17 +508,19 @@ void GateTimer(){
 
 void Velocity(){
   preset.tracks[select_ch -1].velocity = getEncoderPosition(0, 127, true);
-  display.drawLine(45, 32, 45, 40, SH110X_WHITE);
-  display.drawLine(111, 32, 111, 40, SH110X_WHITE);
-  display.fillRect(47, 35, int(preset.tracks[select_ch -1].velocity/2), 3, SH110X_WHITE);
+  display.drawLine(44, 32, 44, 40, SH110X_WHITE);
+  display.drawLine(110, 32, 110, 40, SH110X_WHITE);
+  display.fillRect(46, 35, int(preset.tracks[select_ch -1].velocity/2), 3, SH110X_WHITE);
   display.setTextSize(2);
-  if (preset.tracks[select_ch -1].velocity < 10){
-      display.setCursor(76, 5);
-  } else if (preset.tracks[select_ch -1].velocity < 100){
-      display.setCursor(68, 5);
-  } else if (preset.tracks[select_ch -1].velocity < 1000){
-      display.setCursor(63, 5);
+
+  if (preset.tracks[select_ch -1].velocity >= 0 and preset.tracks[select_ch -1].velocity <= 9){
+    display.setCursor(73, 18);
+  } else if (preset.tracks[select_ch -1].velocity >= 10 and preset.tracks[select_ch -1].velocity <= 99){
+    display.setCursor(67, 18);
+  } else if (preset.tracks[select_ch -1].velocity >= 99 and preset.tracks[select_ch -1].velocity <= 201){
+    display.setCursor(61, 18);
   }
+
   display.print(preset.tracks[select_ch -1].velocity);
   display.setTextSize(1);
 }
@@ -542,10 +561,11 @@ void EachStepNote(){
     display.print("ADD STEPS");
   }
   for(int x = 0; x < len; x++){
-    display.fillRect(cursorX-1, cursorY-1, 13,9, SH110X_WHITE);
+    display.fillRect(cursorX-1, cursorY-1, 19,9, SH110X_WHITE);
     display.setCursor(cursorX, cursorY);
     display.setTextColor(SH110X_BLACK);
-    display.print(temp_list[x]);
+    display.print(midiNotes(preset.tracks[select_ch -1].note));
+    //display.print(temp_list[x]); Display each step
     cursorX += 21;
     if (x == 3 || x == 7 || x == 11){
       cursorX = 37;
@@ -554,22 +574,20 @@ void EachStepNote(){
   }
   cursorX = 0;
   cursorY = 0;
-
 }
 
 void Swing(){
   preset.tracks[select_ch -1].swing = getEncoderPosition(0, 100, true);
-  display.drawLine(45, 32, 45, 40, SH110X_WHITE);
-  display.drawLine(111, 32, 111, 40, SH110X_WHITE);
-  display.fillRect(47, 35, int(preset.tracks[select_ch -1].swing/1.58), 3, SH110X_WHITE);
-  if (preset.tracks[select_ch -1].swing >= 0 and preset.tracks[select_ch -1].swing < 10){
-    display.setCursor(76, 10);
-  } else if (preset.tracks[select_ch -1].swing >= 10 and preset.tracks[select_ch -1].swing < 100){
-    display.setCursor(70, 10);
-  } else if (preset.tracks[select_ch -1].swing == 100){
-    display.setCursor(64, 10);
-  }
-  
+  display.drawLine(44, 32, 44, 40, SH110X_WHITE);
+  display.drawLine(110, 32, 110, 40, SH110X_WHITE);
+  display.fillRect(46, 35, int(preset.tracks[select_ch -1].swing/1.58), 3, SH110X_WHITE);
+  if (preset.tracks[select_ch -1].swing >= 0 and preset.tracks[select_ch -1].swing <= 9){
+    display.setCursor(73, 18);
+  } else if (preset.tracks[select_ch -1].swing >= 10 and preset.tracks[select_ch -1].swing <= 99){
+    display.setCursor(67, 18);
+  } else if (preset.tracks[select_ch -1].swing >= 99 and preset.tracks[select_ch -1].swing <= 201){
+    display.setCursor(61, 18);
+  }  
   display.setTextSize(2);
   display.print(preset.tracks[select_ch -1].swing);
   display.setTextSize(1);
@@ -578,23 +596,18 @@ void Swing(){
 void menu1(int subPosition){
   switch (subPosition){
     case 1: //STEP
-      display.fillTriangle(26, 3, 30, 0, 30, 6, SH110X_WHITE);
       Step();
       break;
     case 2: //OFFSET
-      display.fillTriangle(37, 13, 42, 10, 42, 16, SH110X_WHITE);
       Offset();
       break;
     case 3: //LIMIT
-      display.fillTriangle(32, 23, 36, 20, 36, 26, SH110X_WHITE);
       Limit();
       break;
     case 4: //NOTE
-      display.fillTriangle(26, 33, 30, 30, 30, 36, SH110X_WHITE);
       Note();
       break;
     case 5: //BPM
-      display.fillTriangle(19, 43, 23, 40, 23, 46, SH110X_WHITE);
       Bpm();
       break;
   }
@@ -603,23 +616,18 @@ void menu1(int subPosition){
 void menu2(int subPosition){
   switch (subPosition){
     case 1: //CHANNEL
-      display.fillTriangle(27, 3, 31, 0, 31, 6, SH110X_WHITE);
       ChannelAssignment();
       break;
     case 2: //GATE
-      display.fillTriangle(27, 13, 31, 10, 31, 16, SH110X_WHITE);
       GateTimer();
       break;
     case 3: //VELOCITY
-      display.fillTriangle(27, 23, 31, 20, 31, 26, SH110X_WHITE);
       Velocity();
       break;
     case 4: //EACH
-      display.fillTriangle(27, 33, 31, 30, 31, 36, SH110X_WHITE);
       EachStepNote();
       break;
     case 5: //SWING
-      display.fillTriangle(32, 43, 36, 40, 36, 46, SH110X_WHITE);
       Swing();
       break;
   }
@@ -627,38 +635,28 @@ void menu2(int subPosition){
 void menu3(int subPosition){
   switch (subPosition){
     case 1: //SIGN
-      display.fillTriangle(32, 3, 36, 0, 36, 6, SH110X_WHITE);
       break;
     case 2: //EMPTY
-      display.fillTriangle(32, 13, 36, 10, 36, 16, SH110X_WHITE);
       break;
     case 3: //EMPTY
-      display.fillTriangle(32, 23, 36, 20, 36, 26, SH110X_WHITE);
       break;
     case 4: //EMPTY
-      display.fillTriangle(32, 33, 36, 30, 36, 36, SH110X_WHITE);
       break;
     case 5: //EMPTY
-      display.fillTriangle(32, 43, 36, 40, 36, 46, SH110X_WHITE);
       break;
   }
 }
 void menu4(int subPosition){
   switch (subPosition){
     case 1: //EMPTY
-      display.fillTriangle(32, 3, 36, 0, 36, 6, SH110X_WHITE);
       break;
     case 2: //EMPTY
-      display.fillTriangle(32, 13, 36, 10, 36, 16, SH110X_WHITE);
       break;
     case 3: //EMPTY
-      display.fillTriangle(32, 23, 36, 20, 36, 26, SH110X_WHITE);
       break;
     case 4: //EMPTY
-      display.fillTriangle(32, 33, 36, 30, 36, 36, SH110X_WHITE);
       break;
     case 5: //EMPTY
-      display.fillTriangle(32, 43, 36, 40, 36, 46, SH110X_WHITE);
       break;
   }
 }
