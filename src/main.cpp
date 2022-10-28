@@ -28,11 +28,12 @@ void step_task(void *pvParameters){
           if (offset_buf[i][playing_step[i]] == 1 && preset.tracks[i].mute == 1) {
             gates[i] = preset.tracks[i].gate+1;
           }
-          playing_step[i]++;
-          if (playing_step[i] >= preset.tracks[i].limit) {
-              playing_step[i] = 0;
+          if (step%16==0){
+            playing_step[i]++;
+            if (playing_step[i] >= preset.tracks[i].limit) {
+                playing_step[i] = 0;
+            }
           }
-          //if(step%16==0) gates[i] = preset.tracks[i].gate+1;
           if(gates[i]!=0) gates[i]--; //decrement gates
         }
         xQueueSend(xNote, &gates, 0U);
