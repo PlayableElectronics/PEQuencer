@@ -395,16 +395,24 @@ void Step(){
 }
 
 void Offset(){
-  display.fillRect(68, 27, 13,9, SH110X_BLACK );
-  preset.tracks[select_ch -1].offset = getEncoderPosition(0, 15, true);
-  if (preset.tracks[select_ch -1].offset >= 10){
-      display.fillRect(68, 27, 13,9, SH110X_BLACK );
-      display.setCursor(69, 28);
+  if (preset.tracks[select_ch -1].step == 0){
+    preset.tracks[select_ch -1].offset = 0;
+    display.setCursor(48, 29);
+    display.fillRect(47, 28, 55, 9, SH110X_WHITE);
+    display.setTextColor(SH110X_BLACK);
+    display.print("ADD STEPS");
   } else {
-      display.fillRect(71, 27, 7,9, SH110X_BLACK );
-      display.setCursor(72, 28);
+    display.fillRect(68, 27, 13,9, SH110X_BLACK );
+    preset.tracks[select_ch -1].offset = getEncoderPosition(0, 15, true);
+    if (preset.tracks[select_ch -1].offset >= 10){
+        display.fillRect(68, 27, 13,9, SH110X_BLACK );
+        display.setCursor(69, 28);
+    } else {
+        display.fillRect(71, 27, 7,9, SH110X_BLACK );
+        display.setCursor(72, 28);
+    }
+    display.print(preset.tracks[select_ch -1].offset);
   }
-  display.print(preset.tracks[select_ch -1].offset);
 }
 
 void Limit(){
@@ -423,15 +431,14 @@ void Limit(){
 void Note(){
   display.fillRect(68, 27, 13,9, SH110X_BLACK );
   preset.tracks[select_ch -1].note = getEncoderPosition(21, 108, true);
-  if (preset.tracks[select_ch -1].note >= 10){
+  if (midiNotes(preset.tracks[select_ch -1].note).length()== 2){
       display.fillRect(68, 27, 13,9, SH110X_BLACK );
       display.setCursor(69, 28);
-  } else {
-      display.fillRect(71, 27, 7,9, SH110X_BLACK );
-      display.setCursor(72, 28);
+  } else if(midiNotes(preset.tracks[select_ch -1].note).length()== 3) {
+      display.fillRect(66, 27, 19,9, SH110X_BLACK);
+      display.setCursor(67, 28);
   }
   String noteName = midiNotes(preset.tracks[select_ch -1].note);
-  printf("%d", noteName);
   display.print(noteName);
 }
 
