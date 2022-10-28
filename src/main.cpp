@@ -15,7 +15,7 @@ void clock_task(void *pvParameters) {
     }
     step++;
     if (step>=256) step=0;
-    vTaskDelay(pdMS_TO_TICKS((60.0/preset.tracks[0].bpm)*60.0));
+    vTaskDelay(pdMS_TO_TICKS((60.0/preset.bpm)*60.0));
   }
 }
 
@@ -62,7 +62,7 @@ void note_task(void *pvParameters){
 }
 
 int main() {
-    preset.tracks[0].bpm = 128;
+    preset.bpm = 128;
     stdio_init_all();
     stdio_uart_init_full(uart1, 115200, 20, 21); //debug via stemma
     rgb_init();
