@@ -1,5 +1,11 @@
 #include "defs.h"
 
+using namespace scale_;
+using namespace chord_;
+using namespace tone_;
+
+auto DSharpMajor = scale(Ds,scale_::major);
+
 void clock_task(void *pvParameters) {
   gpio_init(13);
   gpio_set_dir(13, GPIO_OUT);
@@ -17,6 +23,17 @@ void clock_task(void *pvParameters) {
     if (step>=256) step=0;
     vTaskDelay(pdMS_TO_TICKS((60.0/preset.bpm)*60.0));
   }
+}
+
+void pt_task(void *pvParameters){
+    Playtune pt;
+    pt.tune_setscore(score);
+    uint step;
+    while(true){
+        xQueueReceive(xClock, &step, portMAX_DELAY);
+        pt.tune_clock();
+        rgb_update();
+    }
 }
 
 void step_task(void *pvParameters){
@@ -63,6 +80,8 @@ void note_task(void *pvParameters){
 }
 
 int main() {
+  //while (pt.tune_playing) ; /* wait here until playing stops */
+
     preset.bpm = 128;
     stdio_init_all();
     stdio_uart_init_full(uart1, 115200, 20, 21); //debug via stemma
@@ -71,7 +90,7 @@ int main() {
     xNote = xQueueCreate(1, sizeof(uint[16]));
     xTaskCreate(clock_task, "clock", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
     xTaskCreate(step_task, "step", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
-    xTaskCreate(note_task, "note", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
+    xTaskCreate(pt_task, "note", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
     xTaskCreate(display_task, "display", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
     vTaskStartScheduler();
 }

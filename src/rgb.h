@@ -7,6 +7,7 @@
 #define WS2812_PIN 19
 
 uint32_t ccolors[NUM_PIXELS] = {0,0,0,0,0,0,0,0,0,0,0,0};
+uint channel_led[8] = {0,1,3,4,6,7,9,10};
 
 static inline void put_pixel(uint32_t pixel_grb) {
     pio_sm_put_blocking(pio0, 0, pixel_grb << 8u);
