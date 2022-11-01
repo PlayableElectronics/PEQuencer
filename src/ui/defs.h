@@ -43,9 +43,9 @@ const static byte euc16[17][16] PROGMEM = {
 };
 
 char const *menus[4][5] = {
-  {"STEP", "OFFSET", "LIMIT", "NOTE", "BPM"},
-  {"CHAN", "GATE", "VELO", "EACH", "SIGN"},
-  {"SWING", "EMPTY", "EMPTY", "EMPTY", "EMPTY"},
+  {"STEP", "OFF", "LIMIT", "NOTE", "BPM"},
+  {"CHAN", "GATE", "VELO", "EACH", "SWING"},
+  {"SIGN", "EMPTY", "EMPTY", "EMPTY", "EMPTY"},
   {"EMPTY", "EMPTY", "EMPTY", "EMPTY", "EMPTY"}
 };
 

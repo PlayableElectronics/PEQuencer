@@ -11,6 +11,7 @@ struct Track {
   uint velocity;
   uint stepNote[16];
   uint swing;
+  uint offseteach[16];
 };
 
 struct Preset {
@@ -395,16 +396,24 @@ void Step(){
 }
 
 void Offset(){
-  display.fillRect(68, 27, 13,9, SH110X_BLACK );
-  preset.tracks[select_ch -1].offset = getEncoderPosition(0, 15, true);
-  if (preset.tracks[select_ch -1].offset >= 10){
-      display.fillRect(68, 27, 13,9, SH110X_BLACK );
-      display.setCursor(69, 28);
+  if (preset.tracks[select_ch -1].step == 0){
+    preset.tracks[select_ch -1].offset = 0;
+    display.setCursor(48, 29);
+    display.fillRect(47, 28, 55, 9, SH110X_WHITE);
+    display.setTextColor(SH110X_BLACK);
+    display.print("ADD STEPS");
   } else {
-      display.fillRect(71, 27, 7,9, SH110X_BLACK );
-      display.setCursor(72, 28);
+    display.fillRect(68, 27, 13,9, SH110X_BLACK );
+    preset.tracks[select_ch -1].offset = getEncoderPosition(0, 15, true);
+    if (preset.tracks[select_ch -1].offset >= 10){
+        display.fillRect(68, 27, 13,9, SH110X_BLACK );
+        display.setCursor(69, 28);
+    } else {
+        display.fillRect(71, 27, 7,9, SH110X_BLACK );
+        display.setCursor(72, 28);
+    }
+    display.print(preset.tracks[select_ch -1].offset);
   }
-  display.print(preset.tracks[select_ch -1].offset);
 }
 
 void Limit(){
@@ -423,15 +432,14 @@ void Limit(){
 void Note(){
   display.fillRect(68, 27, 13,9, SH110X_BLACK );
   preset.tracks[select_ch -1].note = getEncoderPosition(21, 108, true);
-  if (preset.tracks[select_ch -1].note >= 10){
+  if (midiNotes(preset.tracks[select_ch -1].note).length()== 2){
       display.fillRect(68, 27, 13,9, SH110X_BLACK );
       display.setCursor(69, 28);
-  } else {
-      display.fillRect(71, 27, 7,9, SH110X_BLACK );
-      display.setCursor(72, 28);
+  } else if(midiNotes(preset.tracks[select_ch -1].note).length()== 3) {
+      display.fillRect(66, 27, 19,9, SH110X_BLACK);
+      display.setCursor(67, 28);
   }
   String noteName = midiNotes(preset.tracks[select_ch -1].note);
-  printf("%d", noteName);
   display.print(noteName);
 }
 
@@ -593,6 +601,33 @@ void Swing(){
   display.setTextSize(1);
 }
 
+void OffsetEach(){
+  if (preset.tracks[select_ch -1].step < 2){
+    display.setCursor(48, 29);
+    display.fillRect(47, 28, 55, 9, SH110X_WHITE);
+    display.setTextColor(SH110X_BLACK);
+    display.print("ADD STEPS");
+  } else {
+    int selected = getEncoderPosition(1, preset.tracks[select_ch -1].step, false);
+    for (int j = 0; j < preset.tracks[select_ch -1].limit; j++) { // j = steps
+      display.drawPixel(x16[j], y16[j], SH110X_WHITE);
+    }
+    if (preset.tracks[select_ch -1].step > 1){
+      for (j = 0; j < buf_count - 1; j++) {
+        display.drawLine(line_xbuf[j], line_ybuf[j], line_xbuf[j + 1], line_ybuf[j + 1], SH110X_WHITE);
+      }
+      display.drawLine(line_xbuf[0], line_ybuf[0], line_xbuf[j], line_ybuf[j], SH110X_WHITE);
+    } if (preset.tracks[select_ch -1].step == 1) {
+        if (preset.tracks[select_ch -1].offset != 16 && preset.tracks[select_ch -1].offset != 0){
+          display.drawLine(74, 32, x16[sizeof(x16) - preset.tracks[select_ch -1].offset], y16[sizeof(y16) - preset.tracks[select_ch -1].offset], SH110X_WHITE);
+        } else {
+          display.drawLine(74, 32, x16[0], y16[0], SH110X_WHITE);
+        }
+    }
+    display.drawCircle(line_xbuf[selected -1], line_ybuf[selected -1], 3, SH110X_WHITE);
+  }
+}
+
 void menu1(int subPosition){
   switch (subPosition){
     case 1: //STEP
@@ -637,6 +672,7 @@ void menu3(int subPosition){
     case 1: //SIGN
       break;
     case 2: //EMPTY
+      OffsetEach();
       break;
     case 3: //EMPTY
       break;
