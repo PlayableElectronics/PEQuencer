@@ -25,17 +25,54 @@ void clock_task(void *pvParameters) {
   }
 }
 
-void pt_task(void *pvParameters){
-    Playtune pt;
-    pt.tune_setscore(score);
+void seq_task(void *pvParameters){
     uint step;
+    uint score_cursor[8] = {0,0,0,0,0,0,0,0};
+    uint wait_ticks[8] = {1,1,1,1,1,1,1,1};
+    byte cmd, opcode, chan, note;
     while(true){
         xQueueReceive(xClock, &step, portMAX_DELAY);
-        pt.tune_clock();
-        rgb_update();
-    }
+        for(int i =0;i<8;i++){ //channels
+          if (wait_ticks[i] && --wait_ticks[i] == 0) {
+            while (1) {
+                cmd = score[i][score_cursor[i]++];
+                if (cmd < 0x80) { /* wait count in msec. */
+                  wait_ticks[i] = (unsigned) cmd;
+                  if (wait_ticks[i] == 0) wait_ticks[i] = 1;
+                  break;
+                }
+                opcode = cmd & 0xf0;
+                chan = cmd & 0x0f;
+                if (opcode == CMD_STOPNOTE) { /* stop note */
+                  note = score[i][score_cursor[i]++];
+                  printf("note off %i channel %i\n",note, chan);
+                  ccolors[channel_led[chan]] = 0;
+                }
+                else if (opcode == CMD_PLAYNOTE) { /* play note */
+                  note = score[i][score_cursor[i]++];
+                  ++score_cursor[i]; // ignore volume
+                  printf("note on %i channel %i\n",note, chan);
+                  ccolors[channel_led[chan]] = 0x0c0c0c;
+                }
+                else if (opcode == CMD_INSTRUMENT) { /* change a channel's instrument */
+                  score_cursor[i]++; // ignore it
+                }
+                else if (opcode == CMD_RESTART) { /* restart score */
+                  score_cursor[i] = 0;
+                }
+              }
+            }
+            if (step%16==0){ //make gui spinnin'
+              playing_step[i]++;
+              if (playing_step[i] >= preset.tracks[i].limit) {
+                  playing_step[i] = 0;
+              }
+            }
+          }
+          rgb_update();
+      }
 }
-
+/*
 void step_task(void *pvParameters){
     uint step;
     uint gates[16];
@@ -57,31 +94,9 @@ void step_task(void *pvParameters){
         rgb_update();
     }
 }
-
-void note_task(void *pvParameters){
-    uint channel_led[8] = {0,1,3,4,6,7,9,10};
-    uint gates[16];
-    while(true){
-        xQueueReceive(xNote, &gates, portMAX_DELAY);
-        for(int i=0;i<8;i++){
-          if(gates[i]!=0){
-            if(i==select_ch-1 ){
-              ccolors[channel_led[i]] = 0xffffff;
-            }
-            else{
-              ccolors[channel_led[i]] = 0x0c0c0c;
-            }
-          }
-          else {
-            ccolors[channel_led[i]] = 0;
-          }
-        }
-    }
-}
+*/
 
 int main() {
-  //while (pt.tune_playing) ; /* wait here until playing stops */
-
     preset.bpm = 128;
     stdio_init_all();
     stdio_uart_init_full(uart1, 115200, 20, 21); //debug via stemma
@@ -89,8 +104,7 @@ int main() {
     xClock = xQueueCreate(1, sizeof(uint));
     xNote = xQueueCreate(1, sizeof(uint[16]));
     xTaskCreate(clock_task, "clock", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
-    xTaskCreate(step_task, "step", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
-    xTaskCreate(pt_task, "note", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
+    xTaskCreate(seq_task, "sequencer", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
     xTaskCreate(display_task, "display", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
     vTaskStartScheduler();
 }

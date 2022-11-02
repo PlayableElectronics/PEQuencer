@@ -8,7 +8,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_BINARY_D
 add_executable(pequencer
   #usb_descriptors.c
   main.cpp
-  Playtune.cpp
+  #Playtune.cpp
 )
 
 target_link_libraries(pequencer
