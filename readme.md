@@ -11,6 +11,12 @@ git clone https://github.com/fhdm-dev/pico-arduino-compat.git
 cd pico-arduino-compat
 git submodule update --init arduino-compat/arduino-pico
 ```
+
+### Install addons
+```sh
+# Comment last two lines in diatonic CMake list before make
+https://github.com/pd3v/diatonic
+```
 ### Download libraries
 ```sh
 ./libs/adafruit-sh110x/init.sh
