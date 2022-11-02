@@ -1,4 +1,7 @@
 #include "defs.h"
+#include <map>
+
+std::map<eTaskState, const char *> eTaskStateName { {eReady, "Ready"}, { eRunning, "Running" }, {eBlocked, "Blocked"}, {eSuspended, "Suspended"}, {eDeleted, "Deleted"} };
 
 struct Track {
   uint step;
@@ -430,7 +433,6 @@ void Limit(){
 }
 
 void Note(){
-  display.fillRect(68, 27, 13,9, SH110X_BLACK );
   preset.tracks[select_ch -1].note = getEncoderPosition(21, 108, true);
   if (midiNotes(preset.tracks[select_ch -1].note).length()== 2){
       display.fillRect(68, 27, 13,9, SH110X_BLACK );
@@ -543,16 +545,17 @@ int sort_desc(const void *cmp1, const void *cmp2){
 void EachStepNote(){
   int index_list = 0;
   int len = preset.tracks[select_ch -1].step;
+  int selected = getEncoderPosition(0, len -1, false);
   int temp_list[len] = {};
   int offset_temp_x = 0;
 
   for (int temp_x = 0; temp_x < 16; temp_x ++) {
     if (euc16[preset.tracks[select_ch -1].step][temp_x] == 1){
-        offset_temp_x = temp_x + preset.tracks[select_ch -1].offset;
-        while (offset_temp_x > 16){
-           offset_temp_x = offset_temp_x - 16;
-        }
+        offset_temp_x = temp_x - preset.tracks[select_ch -1].offset;
+        while (offset_temp_x > 0){offset_temp_x = offset_temp_x - 16;}
+        if (offset_temp_x < 0){offset_temp_x = offset_temp_x * -1;} 
         offset_temp_x = 16 - offset_temp_x;
+        if (offset_temp_x == 16){offset_temp_x = 0;};
         temp_list[index_list] = offset_temp_x;
         index_list++;
     }
@@ -562,26 +565,40 @@ void EachStepNote(){
 
   int cursorX = 37;
   int cursorY = 2;
+
   if (len == 0){
     display.setCursor(51, 28);
     display.fillRect(50, 27, 55, 9, SH110X_WHITE);
     display.setTextColor(SH110X_BLACK);
     display.print("ADD STEPS");
-  }
-  for(int x = 0; x < len; x++){
-    display.fillRect(cursorX-1, cursorY-1, 19,9, SH110X_WHITE);
-    display.setCursor(cursorX, cursorY);
-    display.setTextColor(SH110X_BLACK);
-    display.print(midiNotes(preset.tracks[select_ch -1].note));
-    //display.print(temp_list[x]); Display each step
-    cursorX += 21;
-    if (x == 3 || x == 7 || x == 11){
-      cursorX = 37;
-      cursorY += 18;
+  } else {
+    for (int j = 0; j < 16; j++) { // j = steps
+      display.drawPixel(x16[j], y16[j], SH110X_WHITE);
     }
+    if (preset.tracks[select_ch -1].step > 1){
+      for (j = 0; j < buf_count - 1; j++) {
+        display.drawLine(line_xbuf[j], line_ybuf[j], line_xbuf[j + 1], line_ybuf[j + 1], SH110X_WHITE);
+      }
+      display.drawLine(line_xbuf[0], line_ybuf[0], line_xbuf[j], line_ybuf[j], SH110X_WHITE);
+    } if (preset.tracks[select_ch -1].step == 1) {
+        if (preset.tracks[select_ch -1].offset != 16 && preset.tracks[select_ch -1].offset != 0){
+          display.drawLine(74, 32, x16[sizeof(x16) - preset.tracks[select_ch -1].offset], y16[sizeof(y16) - preset.tracks[select_ch -1].offset], SH110X_WHITE);
+        } else {
+          display.drawLine(74, 32, x16[0], y16[0], SH110X_WHITE);
+        }
+    }
+    display.setCursor(40,5);
+    display.print(temp_list[selected]);
+    display.drawCircle(line_xbuf[selected], line_ybuf[selected], 3, SH110X_WHITE);
+    if (midiNotes(preset.tracks[select_ch -1].note).length()== 2){
+      display.fillRect(68, 27, 13,9, SH110X_BLACK );
+      display.setCursor(69, 28);
+    } else if(midiNotes(preset.tracks[select_ch -1].note).length()== 3) {
+      display.fillRect(66, 27, 19,9, SH110X_BLACK);
+      display.setCursor(67, 28);
+    }
+    display.print(midiNotes(preset.tracks[select_ch -1].note));
   }
-  cursorX = 0;
-  cursorY = 0;
 }
 
 void Swing(){
