@@ -7,18 +7,19 @@ struct Track {
   uint step;
   uint offset;
   uint limit;
-  int  note;
   uint mute;
   uint gate;
+  uint note;
+  uint stepNote[16];
   uint channel;
   uint velocity;
-  uint stepNote[16];
   uint swing;
-  uint offseteach[16];
+  uint stepOffset[16];
 };
 
 struct Preset {
   struct Track tracks[16];
+  uint swing;
   uint bpm;
 };
 
@@ -236,19 +237,19 @@ void drawStatics(int current_page){
     }
     display.setCursor(1, m*10+2);
     display.print(menus[current_page][m]);
-    
+
   }
   // Draw left margin line
   display.drawLine(34,0, 34 ,64, SH110X_WHITE);
-  
+
   display.fillRect(0, 53, 9, 12, SH110X_WHITE);
   if (preset.tracks[select_ch -1].mute == 0){
       display.fillRect(0, 53, 35, 12, SH110X_WHITE);
-      
+
       display.setTextColor(SH110X_BLACK);
       display.setCursor(2, 55);
       display.print(select_ch);
-      display.setCursor(9, 55);      
+      display.setCursor(9, 55);
       display.print("MUTE");
   } else {
       display.fillRect(0, 53, 9, 12, SH110X_WHITE);
@@ -264,7 +265,7 @@ void drawStatics(int current_page){
   }
   ccolors[MENU_LED[current_page]-1]=0x00FF00;
   //pixels.setPixelColor(MENU_LED[current_page]-1, 0x00FF00);
-  
+
   for (int x = 0; x < 8; x++){
     if (x == select_ch -1){
       buf_count = 0;
@@ -278,7 +279,7 @@ void drawStatics(int current_page){
     }
   }
   if (current_page == 0){ // Graphic only for menu n.1
-    
+
     for (int k = 0; k < 8; k++){
       for (int i = preset.tracks[k].offset; i < 16; i++) {
         offset_buf[k][i - preset.tracks[k].offset] = (pgm_read_byte(&(euc16[preset.tracks[k].step][i]))) ;
@@ -295,11 +296,11 @@ void drawStatics(int current_page){
     if (offset_buf[select_ch -1][playing_step[select_ch -1]] == 0) {
         display.drawCircle(x16[playing_step[select_ch -1]], y16[playing_step[select_ch -1]], 2, SH110X_WHITE);
     }
-    
+
     if (offset_buf[select_ch -1][playing_step[select_ch -1]] == 1 && preset.tracks[select_ch -1].mute == 1) {
         display.fillCircle(x16[playing_step[select_ch -1]], y16[playing_step[select_ch -1]], 3, SH110X_WHITE);
     }
-    
+
     if (preset.tracks[select_ch -1].mute == 0) {
         display.drawCircle(x16[playing_step[select_ch -1]], y16[playing_step[select_ch -1]], 2, SH110X_WHITE);
     }
@@ -316,7 +317,7 @@ void drawStatics(int current_page){
         } else {
           display.drawLine(74, 32, x16[0], y16[0], SH110X_WHITE);
         }
-    } 
+    }
   }
 
   if (current_page == 1){ // Graphic only for menu n.2
@@ -510,7 +511,7 @@ void GateTimer(){
   } else if (preset.tracks[select_ch -1].gate >= 99 and preset.tracks[select_ch -1].gate <= 201){
     display.setCursor(35, 22);
   }
-  
+
   display.print(preset.tracks[select_ch -1].gate);
   display.println("/200");
   display.setTextSize(1);
@@ -553,7 +554,7 @@ void EachStepNote(){
     if (euc16[preset.tracks[select_ch -1].step][temp_x] == 1){
         offset_temp_x = temp_x - preset.tracks[select_ch -1].offset;
         while (offset_temp_x > 0){offset_temp_x = offset_temp_x - 16;}
-        if (offset_temp_x < 0){offset_temp_x = offset_temp_x * -1;} 
+        if (offset_temp_x < 0){offset_temp_x = offset_temp_x * -1;}
         offset_temp_x = 16 - offset_temp_x;
         if (offset_temp_x == 16){offset_temp_x = 0;};
         temp_list[index_list] = offset_temp_x;
@@ -612,7 +613,7 @@ void Swing(){
     display.setCursor(67, 18);
   } else if (preset.tracks[select_ch -1].swing >= 99 and preset.tracks[select_ch -1].swing <= 201){
     display.setCursor(61, 18);
-  }  
+  }
   display.setTextSize(2);
   display.print(preset.tracks[select_ch -1].swing);
   display.setTextSize(1);
