@@ -45,7 +45,6 @@ void seq_calc(uint chan){
     
     int gate = preset.tracks[chan].gate;
     if (gate == 0){gate = 1;};
-
     
     for(int i = 0 ; i < index; i++){
       if (prev == 0){ // Only for first step || Delay calculation
@@ -69,26 +68,18 @@ void seq_calc(uint chan){
 
       }
       prev++;
-
-      score[chan][jndex++] = 0x90;
+      score[chan][jndex++] = (byte)(144 + chan);
       //printf("0x%02x ", 0x90); // Note ON
       score[chan][jndex++] = 0xAA;
       //printf("0x%02x ", 0xAA); // Note Number
-      score[chan][jndex++] =  0x41;
+      score[chan][jndex++] = 0x41;
       //printf("0x%02x ", 0x41); // Note Velocity
-      score[chan][jndex++] =  (byte)(gate);
+      score[chan][jndex++] = (byte)(gate);
       //printf("0x%02x ", gate); // Gate
-      score[chan][jndex++] =  0x80;
+      score[chan][jndex++] = (byte)(128 + chan);
       //printf("0x%02x ", 0x80);  // Note OFF
-      score[chan][jndex++] =  0xAA;
+      score[chan][jndex++] = 0xAA;
       //printf("0x%02x ", 0xAA);  // Note Number
-
-      // printf(" | ");
-      // printf(" %i ", (starts_sorted[i + 1]));
-      // printf(" %i ", (starts_sorted[i]));
-      // printf(" %i ", (i + 1));
-      // printf(" %i ", index);
-      // printf(" | ");
       
       if (i + 1 != index){
         if ((starts_sorted[i + 1] - starts_sorted[i]) * 32 > 127){
@@ -114,17 +105,14 @@ void seq_calc(uint chan){
 
   }
 
-  // 0x30 0x90 0xaa 0x41 0x01 0x80 0xaa  |  5  1  | 0x7f  foo1 0x01 0x90 0xaa 0x41 0x01 0x80 0xaa  |  536898640  5  | 0x7f  foo1 0xe1  foo3 0x40 0xe0 
-  printf("\n");
-  if(chan==0){
-     for(int i =0;i<128;i++){
-       printf("0x%02x ",score[chan][i]);
-     }
-     printf("\n");
-   }
+  // printf("\n");
+  // if(chan==3){
+  //    for(int i =0;i<128;i++){
+  //      printf("0x%02x ",score[chan][i]);
+  //    }
+  //    printf("\n");
+  //  }
 }
- 
-// 0x50 0x90 0xaa 0x41 0x01 0x80 0xaa 0x7f 0x41 0x90 0xaa 0x41 0x01 0x80 0xaa 0x7f 0x21 0x90 0xaa 0x41 0x01 0x80 0xaa 0x7f 0xc1 0x40 0xe0
 
 // void seq_calc(uint chan){
 //   uint starts[16];
@@ -262,7 +250,7 @@ void seq_task(void *pvParameters){
     }
     while(true){
         xQueueReceive(xClock, &step, portMAX_DELAY);
-        for(int i =0;i<8;i++){ //channels
+        for(int i = 0; i < 8; i++){ //channels
           if (wait_ticks[i] && --wait_ticks[i] == 0) {
             while (true) {
                 cmd = score[i][score_cursor[i]++];
@@ -276,13 +264,13 @@ void seq_task(void *pvParameters){
                 if (opcode == CMD_STOPNOTE) { /* stop note */
                   note = score[i][score_cursor[i]++];
                   // score_cursor[i]++; // ignore it
-                  // printf("note off %i channel %i\n",note, chan);
+                  printf("note off %i channel %i\n",note, chan);
                   ccolors[channel_led[i]] = 0;
                 }
                 else if (opcode == CMD_PLAYNOTE) { /* play note */
                   note = score[i][score_cursor[i]++];
                   ++score_cursor[i]; // ignore volume
-                  //printf("note on %i channel %i\n",note, chan);
+                  printf("note on %i channel %i\n",note, chan);
                   ccolors[channel_led[i]] = 0x0c0c0c;
                 }
                 else if (opcode == CMD_INSTRUMENT) { /* change a channel's instrument */
@@ -294,7 +282,7 @@ void seq_task(void *pvParameters){
                 }
               }
             }
-            if (step%16==0){ //make gui spinnin'
+            if (step%32==0){ //make gui spinnin'
               playing_step[i]++;
               if (playing_step[i] >= preset.tracks[i].limit) {
                   playing_step[i] = 0;
