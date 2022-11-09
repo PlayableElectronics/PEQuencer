@@ -7,106 +7,110 @@
 //auto DSharpMajor = scale(Ds,scale_::major);
 
 void seq_calc(uint chan){
-  uint starts[16];
-  int offset_temp_x = 0;
-  uint index = 0;
-
-  for(int i = 0; i < 16 ;i++){
-    //score[chan][i]=0;
-    if (euc16[preset.tracks[chan].step][i] == 1){
-        offset_temp_x = i - preset.tracks[chan].offset;
-        while (offset_temp_x > 0){offset_temp_x = offset_temp_x - 16;}
-        if (offset_temp_x < 0){offset_temp_x = offset_temp_x * -1;}
-        offset_temp_x = 16 - offset_temp_x;
-        if (offset_temp_x == 16){offset_temp_x = 0;};
-        if (offset_temp_x < preset.tracks[chan].limit){
-          starts[index]=offset_temp_x;
-          index++;
-        }      
-    } 
-  }
-
-  uint starts_sorted[index];
-
-  for(int i = 0; i < index; i++){
-    starts_sorted[i] = starts[i];
-  }
-  
-  int lt_length = sizeof(starts_sorted) / sizeof(starts_sorted[0]);
-  qsort(starts_sorted, lt_length, sizeof(starts_sorted[0]), sort_asc);
-
-  uint scores[32];
-  int prev = 0;
-  
-  int gate = preset.tracks[chan].gate;
-  if (gate == 0){gate = 1;};
-
   uint jndex = 0;
-  for(int i = 0 ; i < index; i++){
-    if (preset.tracks[chan].step == 0){ // If 0 Steps Exit
-      score[chan][jndex++] = (byte)(224);
-      break;
+  if (preset.tracks[chan].limit == 0){ // Temporary solution 
+    score[chan][jndex++] = (byte)(127);
+    score[chan][jndex++] = (byte)(224);
+  } else {
+
+    uint starts[16];
+    int offset_temp_x = 0;
+    uint index = 0;
+
+    for(int i = 0; i < 16 ;i++){
+      if (euc16[preset.tracks[chan].step][i] == 1){
+          offset_temp_x = i - preset.tracks[chan].offset;
+          while (offset_temp_x > 0){offset_temp_x = offset_temp_x - 16;}
+          if (offset_temp_x < 0){offset_temp_x = offset_temp_x * -1;}
+          offset_temp_x = 16 - offset_temp_x;
+          if (offset_temp_x == 16){offset_temp_x = 0;};
+          if (offset_temp_x < preset.tracks[chan].limit){
+            starts[index]=offset_temp_x;
+            index++;
+          }      
+      } 
     }
-    if (prev == 0){ // Only for first step || Delay calculation
-      if ((starts_sorted[0] * 32 + 16) > 127 and (starts_sorted[0] * 32 + 16) <= 255){
-        score[chan][jndex++] = (byte)(127);
-        //printf("0x%02x ", (byte)(127));
-        score[chan][jndex++] = (byte)(starts_sorted[0] * 32 + 16 - 127);
-        //printf("0x%02x ", (byte)(starts_sorted[0] * 32 + 16 - 127));
-      } else if((starts_sorted[0] * 32 + 16) > 255){
-        score[chan][jndex++] = (byte)(127);
-        //printf("0x%02x ", (byte)(127));
-        score[chan][jndex++] = (byte)(127);
-        //printf("0x%02x ", (byte)(127));
-        score[chan][jndex++] = (byte)(starts_sorted[0] * 32 + 16 - 127);
-        //printf("0x%02x ", (byte)(starts_sorted[0] * 32 + 16 - 127));
+
+    uint starts_sorted[index];
+
+    for(int i = 0; i < index; i++){
+      starts_sorted[i] = starts[i];
+    }
+    
+    int lt_length = sizeof(starts_sorted) / sizeof(starts_sorted[0]);
+    qsort(starts_sorted, lt_length, sizeof(starts_sorted[0]), sort_asc);
+
+    uint scores[32];
+    int prev = 0;
+    
+    int gate = preset.tracks[chan].gate;
+    if (gate == 0){gate = 1;};
+
+    
+    for(int i = 0 ; i < index; i++){
+      if (prev == 0){ // Only for first step || Delay calculation
+        if ((starts_sorted[0] * 32 + 16) > 127 and (starts_sorted[0] * 32 + 16) <= 255){
+          score[chan][jndex++] = (byte)(127);
+          //printf("0x%02x ", (byte)(127));
+          score[chan][jndex++] = (byte)(starts_sorted[0] * 32 + 16 - 127);
+          //printf("0x%02x ", (byte)(starts_sorted[0] * 32 + 16 - 127));
+        } else if((starts_sorted[0] * 32 + 16) > 255){
+          score[chan][jndex++] = (byte)(127);
+          //printf("0x%02x ", (byte)(127));
+          score[chan][jndex++] = (byte)(127);
+          //printf("0x%02x ", (byte)(127));
+          score[chan][jndex++] = (byte)(starts_sorted[0] * 32 + 16 - 127);
+          //printf("0x%02x ", (byte)(starts_sorted[0] * 32 + 16 - 127));
+        }
+        else {
+          score[chan][jndex++] = (byte)(starts_sorted[0] * 32 + 16);
+          //printf("0x%02x ",(byte)(starts_sorted[0] * 32 + 16));
+        }
+
       }
-      else {
-        score[chan][jndex++] = (byte)(starts_sorted[0] * 32 + 16);
-        //printf("0x%02x ",(byte)(starts_sorted[0] * 32 + 16));
+      prev++;
+
+      score[chan][jndex++] = 0x90;
+      //printf("0x%02x ", 0x90); // Note ON
+      score[chan][jndex++] = 0xAA;
+      //printf("0x%02x ", 0xAA); // Note Number
+      score[chan][jndex++] =  0x41;
+      //printf("0x%02x ", 0x41); // Note Velocity
+      score[chan][jndex++] =  (byte)(gate);
+      //printf("0x%02x ", gate); // Gate
+      score[chan][jndex++] =  0x80;
+      //printf("0x%02x ", 0x80);  // Note OFF
+      score[chan][jndex++] =  0xAA;
+      //printf("0x%02x ", 0xAA);  // Note Number
+
+      if ((starts_sorted[i + 1] - starts_sorted[i]) * 32 > 127){
+        score[chan][jndex++] =  (byte)(127);
+        //printf("0x%02x ",(byte)(127)); // Delay
+        score[chan][jndex++] =  (byte)((starts_sorted[i + 1] - starts_sorted[i]) * 32 - 127);
+        //printf("0x%02x ",(byte)((starts_sorted[i + 1] - starts_sorted[i]) * 32 - 127));  // Delay
       }
-
+      else{
+        score[chan][jndex++] = (byte)((starts_sorted[i + 1] - starts_sorted[i]) * 32);
+        //printf("0x%02x ",(byte)((starts_sorted[i + 1] - starts_sorted[i]) * 32));  // Delay
+      }
+      if (prev == index){
+        score[chan][jndex++] = (byte)(((preset.tracks[chan].limit - starts_sorted[index - 1])-1)*32);
+        //printf("0x%02x ",(byte)(((preset.tracks[chan].limit - starts_sorted[index - 1])-1)*32)); // End Delay
+        score[chan][jndex++] = (byte)(224);
+        //printf("0x%02x ",(byte)(224)); // End Pattern
+      }
     }
-    prev++;
-
-    score[chan][jndex++] = 0x90;
-    //printf("0x%02x ", 0x90); // Note ON
-    score[chan][jndex++] = 0xAA;
-    //printf("0x%02x ", 0xAA); // Note Number
-    score[chan][jndex++] =  0x41;
-    //printf("0x%02x ", 0x41); // Note Velocity
-    score[chan][jndex++] =  (byte)(gate);
-    //printf("0x%02x ", gate); // Gate
-    score[chan][jndex++] =  0x80;
-    //printf("0x%02x ", 0x80);  // Note OFF
-    score[chan][jndex++] =  0xAA;
-    //printf("0x%02x ", 0xAA);  // Note Number
-
-    if ((starts_sorted[i + 1] - starts_sorted[i]) * 32 > 127){
-      score[chan][jndex++] =  (byte)(127);
-      //printf("0x%02x ",(byte)(127)); // Delay
-      score[chan][jndex++] =  (byte)((starts_sorted[i + 1] - starts_sorted[i]) * 32 - 127);
-      //printf("0x%02x ",(byte)((starts_sorted[i + 1] - starts_sorted[i]) * 32 - 127));  // Delay
-    }
-    else{
-      score[chan][jndex++] = (byte)((starts_sorted[i + 1] - starts_sorted[i]) * 32);
-      //printf("0x%02x ",(byte)((starts_sorted[i + 1] - starts_sorted[i]) * 32));  // Delay
-    }
-    if (prev == index){
-      score[chan][jndex++] = (byte)(((preset.tracks[chan].limit - starts_sorted[index - 1])-1)*32);
-      //printf("0x%02x ",(byte)(((preset.tracks[chan].limit - starts_sorted[index - 1])-1)*32)); // End Delay
-      score[chan][jndex++] = (byte)(224);
-      //printf("0x%02x ",(byte)(224)); // End Pattern
-    }
+        printf("\nfoooooooooooooo\n");
   }
-  printf("\n");
+
   if(chan==0){
-    for(int i =0;i<32;i++){
+    for(int i =0;i<128;i++){
       printf("0x%02x ",score[chan][i]);
     }
     printf("\n");
   }
 }
+
 
 
 // void seq_calc(uint chan){
@@ -282,6 +286,9 @@ void seq_task(void *pvParameters){
               if (playing_step[i] >= preset.tracks[i].limit) {
                   playing_step[i] = 0;
               }
+            }
+            if (playing_step[i] >= 128){
+              playing_step[i] = 0;
             }
           }
           rgb_update();
