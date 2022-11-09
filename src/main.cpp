@@ -83,15 +83,26 @@ void seq_calc(uint chan){
       score[chan][jndex++] =  0xAA;
       //printf("0x%02x ", 0xAA);  // Note Number
 
-      if ((starts_sorted[i + 1] - starts_sorted[i]) * 32 > 127){
-        score[chan][jndex++] =  (byte)(127);
-        //printf("0x%02x ",(byte)(127)); // Delay
-        score[chan][jndex++] =  (byte)((starts_sorted[i + 1] - starts_sorted[i]) * 32 - 127);
-        //printf("0x%02x ",(byte)((starts_sorted[i + 1] - starts_sorted[i]) * 32 - 127));  // Delay
-      }
-      else{
-        score[chan][jndex++] = (byte)((starts_sorted[i + 1] - starts_sorted[i]) * 32);
-        //printf("0x%02x ",(byte)((starts_sorted[i + 1] - starts_sorted[i]) * 32));  // Delay
+      // printf(" | ");
+      // printf(" %i ", (starts_sorted[i + 1]));
+      // printf(" %i ", (starts_sorted[i]));
+      // printf(" %i ", (i + 1));
+      // printf(" %i ", index);
+      // printf(" | ");
+      
+      if (i + 1 != index){
+        if ((starts_sorted[i + 1] - starts_sorted[i]) * 32 > 127){
+          score[chan][jndex++] =  (byte)(127);
+          //printf("0x%02x ",(byte)(127)); // Delay
+          score[chan][jndex++] =  (byte)((starts_sorted[i + 1] - starts_sorted[i]) * 32 - 127);
+
+          //printf("0x%02x ",(byte)((starts_sorted[i + 1] - starts_sorted[i]) * 32 - 127));  // Delay
+        }
+        else{
+          score[chan][jndex++] = (byte)((starts_sorted[i + 1] - starts_sorted[i]) * 32);
+
+          //printf("0x%02x ",(byte)((starts_sorted[i + 1] - starts_sorted[i]) * 32));  // Delay
+        }
       }
       if (prev == index){
         score[chan][jndex++] = (byte)(((preset.tracks[chan].limit - starts_sorted[index - 1])-1)*32);
@@ -100,18 +111,20 @@ void seq_calc(uint chan){
         //printf("0x%02x ",(byte)(224)); // End Pattern
       }
     }
-        printf("\nfoooooooooooooo\n");
+
   }
 
+  // 0x30 0x90 0xaa 0x41 0x01 0x80 0xaa  |  5  1  | 0x7f  foo1 0x01 0x90 0xaa 0x41 0x01 0x80 0xaa  |  536898640  5  | 0x7f  foo1 0xe1  foo3 0x40 0xe0 
+  printf("\n");
   if(chan==0){
-    for(int i =0;i<128;i++){
-      printf("0x%02x ",score[chan][i]);
-    }
-    printf("\n");
-  }
+     for(int i =0;i<128;i++){
+       printf("0x%02x ",score[chan][i]);
+     }
+     printf("\n");
+   }
 }
-
-
+ 
+// 0x50 0x90 0xaa 0x41 0x01 0x80 0xaa 0x7f 0x41 0x90 0xaa 0x41 0x01 0x80 0xaa 0x7f 0x21 0x90 0xaa 0x41 0x01 0x80 0xaa 0x7f 0xc1 0x40 0xe0
 
 // void seq_calc(uint chan){
 //   uint starts[16];
