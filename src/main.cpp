@@ -68,12 +68,15 @@ void seq_calc(uint chan){
           delay = 1;
           if (valueinarray(i, starts, index)){
             score[chan][jndex++] = (byte)(144 + chan); // Note ON
-            score[chan][jndex++] = 0xAA;               // Note Number
-            score[chan][jndex++] = 0x41;               // Velocity
+            //score[chan][jndex++] = 0xAA;               // Note Number
+            score[chan][jndex++] = (byte)(preset.tracks[chan].note);               // Note Number
+            //score[chan][jndex++] = 0x41;               // Velocity
+            score[chan][jndex++] = (byte)(preset.tracks[chan].velocity);               // Velocity
           }
           if (valueinarray(i, ends, index) == 1){
             score[chan][jndex++] = (byte)(128 + chan); // Note OFF
-            score[chan][jndex++] = 0xAA;               // Note Number
+            //score[chan][jndex++] = 0xAA;               // Note Number
+            score[chan][jndex++] = (byte)(preset.tracks[chan].note);               // Note Number
           }
         }
         delay++;
@@ -88,16 +91,16 @@ void seq_calc(uint chan){
         check = check + delay -1;
       }
 
-      printf(" \n Check: %i \n", check);
+      //printf(" \n Check: %i \n", check);
       score[chan][jndex++] = 0xE0;
     }
   
-    if(chan == 0){
-      for(int i = 0 ;i < 32; i++){
-        printf("0x%02x ",score[chan][i]);
-      }
-      printf("\n \n");
-  }
+    // if(chan == 0){
+    //   for(int i = 0 ;i < 32; i++){
+    //     printf("0x%02x ",score[chan][i]);
+    //   }
+    //   printf("\n \n");
+    // }
 
 }
 void clock_task(void *pvParameters) {
@@ -123,9 +126,9 @@ void clock_task(void *pvParameters) {
 }
 
 void seq_task(void *pvParameters){
-    uint step;
     uint score_cursor[8] = {0,0,0,0,0,0,0,0};
     uint wait_ticks[8] = {1,1,1,1,1,1,1,1};
+    uint playing_step_32[8] = {0,0,0,0,0,0,0,0};
     //char lists [250];
     byte cmd, opcode, chan, note;
     for(int i = 0; i < 8; i++){
@@ -146,19 +149,12 @@ void seq_task(void *pvParameters){
         for(int i = 0; i < 8; i++){ //channels
           if (sizeof(score[i]) > 0){
             if (wait_ticks[i] && --wait_ticks[i] == 0) {
-            while (true) {
+              while (true) {
                 cmd = score[i][score_cursor[i]++];
-                // if (i == 0){
-                //   printf("0x%02x ", cmd);
-                //   printf("\n");
-                //   if (cmd == 0xe0){
-                //     printf("end");
-                //   }
-                // }
+                if (i == 0) printf(" SC: %i , CMD: 0x%02x \n ", score_cursor[i], cmd);
                 if (cmd < 0x80) { /* wait count in msec. */
                   wait_ticks[i] = (unsigned) cmd;
                   if (wait_ticks[i] == 0) wait_ticks[i] = 1;
-                  //printf("%i ", step);
                   //printf("%i \n", wait_ticks[i]);
                   break;
                 }
@@ -167,13 +163,13 @@ void seq_task(void *pvParameters){
                 if (opcode == CMD_STOPNOTE) { /* stop note */
                   note = score[i][score_cursor[i]++];
                   // score_cursor[i]++; // ignore it
-                  printf("note off %i channel %i\n",note, chan);
+                  //printf("note off %i channel %i\n",note, chan);
                   ccolors[channel_led[i]] = 0;
                 }
                 else if (opcode == CMD_PLAYNOTE) { /* play note */
                   note = score[i][score_cursor[i]++];
                   ++score_cursor[i]; // ignore volume
-                  printf("note on %i channel %i\n",note, chan);
+                  //printf("note on %i channel %i\n",note, chan);
                   ccolors[channel_led[i]] = 0x0c0c0c;
                 }
                 else if (opcode == CMD_INSTRUMENT) { /* change a channel's instrument */
@@ -182,20 +178,24 @@ void seq_task(void *pvParameters){
                 else if (opcode == CMD_RESTART) { /* restart score */                  
                   score_cursor[i] = 0;
                   seq_calc(i); //recalc one
+                  playing_step[i] = -1;
+                  playing_step_32[i] = 0;
                 }
-              }
+              } 
             }
-            if (step % 32 == 0){ //make gui spinnin'
-              playing_step[i]++;
-              if (playing_step[i] >= preset.tracks[i].limit) {
-                  playing_step[i] = 0;
+            if (preset.tracks[chan].limit != 0){
+              if (playing_step_32[i] % 32 == 0){
+                playing_step[i]++;
               }
+              playing_step_32[i]++;
+            } else if (preset.tracks[chan].limit == 0){
+              playing_step[i] == 1;
             }
+
           }
           rgb_update();
-          }
+        }
         int bpm = 60.0 / preset.bpm * 1000.0 / 32.0;
-        step++;
         vTaskDelay(pdMS_TO_TICKS(bpm));
       }
 }
@@ -208,7 +208,7 @@ int main() {
     xClock = xQueueCreate(1, sizeof(uint));
     xNote = xQueueCreate(1, sizeof(uint[16]));
     //xTaskCreate(clock_task, "clock", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
+    xTaskCreate(display_task, "display", configMINIMAL_STACK_SIZE, NULL, 1, NULL);    
     xTaskCreate(seq_task, "sequencer", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
-    xTaskCreate(display_task, "display", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
     vTaskStartScheduler();
 }
