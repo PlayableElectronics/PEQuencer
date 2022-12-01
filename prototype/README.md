@@ -1,4 +1,0 @@
-<img src="https://raw.githubusercontent.com/PlayableElectronics/PEQuencer/main/prototype/images/Screenshot%202022-11-14%20at%2014.58.58.png" width="100%" />
-<img src="https://raw.githubusercontent.com/PlayableElectronics/PEQuencer/main/prototype/images/Screenshot%202022-11-14%20at%2014.56.56.png" width="100%" />
-<img src="https://raw.githubusercontent.com/PlayableElectronics/PEQuencer/main/prototype/images/Screenshot%202022-11-14%20at%2014.57.21.png" width="100%" /> 
-<img src="https://raw.githubusercontent.com/PlayableElectronics/PEQuencer/main/prototype/images/Screenshot%202022-11-14%20at%2014.57.50.png" width="100%" />
