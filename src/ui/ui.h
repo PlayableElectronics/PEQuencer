@@ -42,7 +42,7 @@ byte line_xbuf[17];//Buffer for drawing lines
 byte line_ybuf[17];//Buffer for drawing lines
 
 // Global variables store
-byte playing_step[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; //playing step number , CH1,2,3,4,5,6
+int playing_step[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; //playing step number , CH1,2,3,4,5,6
 
 // Menu Positions
 int j = 0;
