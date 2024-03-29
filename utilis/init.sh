@@ -6,7 +6,7 @@ COMPAT_DIR=$ROOT_DIR/submodules/pico-arduino-compat
 fetch_submodules (){
   cd $ROOT_DIR && git submodule init
   cd $ROOT_DIR/submodules/pico-sdk && git submodule update --init
-  cd $ROOT_DIR/submdules/pico-arduino-compat && git submodule update --init arduino-compat/arduino-pico
+  cd $ROOT_DIR/submodules/pico-arduino-compat && git submodule update --init arduino-compat/arduino-pico
 }
 
 copy_cmake () {
@@ -19,11 +19,11 @@ fetch_libraries () {
   cd -
 }
 
-#fetch_submodules
-#copy_cmake
+fetch_submodules
+copy_cmake
 
-#fetch_libraries "adafruit-sh110x"
-#fetch_libraries "rotaryencoder"
-#fetch_libraries "easybutton"
+fetch_libraries "adafruit-sh110x"
+fetch_libraries "rotaryencoder"
+fetch_libraries "easybutton"
 
 echo "Please type: export PICO_SDK_PATH="$ROOT_DIR/submodules/pico-sdk""
