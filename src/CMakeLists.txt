@@ -1,7 +1,7 @@
-add_subdirectory(../../pico-arduino-compat/libs/adafruit-sh110x lib/adafruit-sh110x)
-add_subdirectory(../../pico-arduino-compat/libs/rotaryencoder lib/rotaryencoder)
-add_subdirectory(../../pico-arduino-compat/libs/easybutton lib/easybutton)
-add_subdirectory(../../diatonic lib/diatonic)
+add_subdirectory(../submodules/pico-arduino-compat/libs/adafruit-sh110x lib/adafruit-sh110x)
+add_subdirectory(../submodules/pico-arduino-compat/libs/rotaryencoder lib/rotaryencoder)
+add_subdirectory(../submodules/pico-arduino-compat/libs/easybutton lib/easybutton)
+add_subdirectory(../submodules/diatonic lib/diatonic)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_BINARY_DIR} ".")
 
