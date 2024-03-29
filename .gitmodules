@@ -1,0 +1,9 @@
+[submodule "submodules/pico-sdk"]
+	path = submodules/pico-sdk
+	url = https://github.com/raspberrypi/pico-sdk
+[submodule "submodules/pico-arduino-compat"]
+	path = submodules/pico-arduino-compat
+	url = https://github.com/PlayableElectronics/pico-arduino-compat
+[submodule "submodules/diatonic"]
+	path = submodules/diatonic
+	url = https://github.com/PlayableElectronics/diatonic
