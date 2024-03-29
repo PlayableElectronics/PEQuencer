@@ -4,6 +4,7 @@ ROOT_DIR=$(realpath "$(realpath $(dirname "$0"))/..")
 COMPAT_DIR=$ROOT_DIR/submodules/pico-arduino-compat
 fetch_submodules (){
   cd $ROOT_DIR && git submodule update --init
+  cd $ROOT_DIR/submodules/diatonic && git pull origin develop
   cd $ROOT_DIR/submodules/pico-sdk && git submodule update --init
   cd $ROOT_DIR/submodules/pico-arduino-compat && git submodule update --init arduino-compat/arduino-pico
 }
