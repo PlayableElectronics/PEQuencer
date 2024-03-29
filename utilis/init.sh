@@ -5,8 +5,8 @@ COMPAT_DIR=$ROOT_DIR/submodules/pico-arduino-compat
 
 fetch_submodules (){
   cd $ROOT_DIR && git submodule init
-  cd $ROOT_DIR/submodules/pico-sdk && git submodule update --init
-  cd $ROOT_DIR/submodules/pico-arduino-compat && git submodule update --init arduino-compat/arduino-pico
+  git submodule update --init $ROOT_DIR/submodules/pico-sdk
+  git submodule update --init $ROOT_DIR/submodules/pico-arduino-compat/arduino-compat/arduino-pico
 }
 
 copy_cmake () {
