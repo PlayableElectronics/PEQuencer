@@ -1,16 +1,16 @@
-#include "hardware/pio.h"
 #include "hardware/clocks.h"
+#include "hardware/pio.h"
 #include "ws2812.pio.h"
 
 #define IS_RGBW false
 #define NUM_PIXELS 12
 #define WS2812_PIN 19
 
-uint32_t ccolors[NUM_PIXELS] = {0,0,0,0,0,0,0,0,0,0,0,0};
-uint channel_led[8] = {0,1,3,4,6,7,9,10};
+uint32_t ccolors[NUM_PIXELS] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+uint channel_led[8] = {0, 1, 3, 4, 6, 7, 9, 10};
 
 static inline void put_pixel(uint32_t pixel_grb) {
-    pio_sm_put_blocking(pio0, 0, pixel_grb << 8u);
+  pio_sm_put_blocking(pio0, 0, pixel_grb << 8u);
 }
 
 void rgb_init() {
@@ -22,6 +22,6 @@ void rgb_init() {
 }
 
 void rgb_update() {
-    for (int i = 0; i < NUM_PIXELS; ++i)
-      put_pixel(ccolors[i]);
+  for (int i = 0; i < NUM_PIXELS; ++i)
+    put_pixel(ccolors[i]);
 }
