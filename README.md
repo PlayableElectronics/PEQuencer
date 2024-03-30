@@ -1,39 +1,36 @@
-### Install Pico SDK
-
+## 🏃Get Started
+### Install the toolchain
+ - for MacOS
 ```sh
-git clone https://github.com/raspberrypi/pico-sdk
-export PICO_SDK_PATH="$HOME/[repos dir]/pico-sdk"
+$ brew install cmake
+$ brew tap ArmMbed/homebrew-formulae
+$ brew install arm-none-eabi-gcc
 ```
-
-### Install External libraries
+- for Linux
 ```sh
-git clone https://github.com/fhdm-dev/pico-arduino-compat.git
-cd pico-arduino-compat
-git submodule update --init arduino-compat/arduino-pico
+$ sudo apt install cmake \
+	gcc-arm-none-eabi \
+	libnewlib-arm-none-eabi \ 
+	libstdc++-arm-none-eabi-newlib
 ```
-
-### Install addons
+### Set-up repository
 ```sh
-# Comment last two lines in diatonic CMake list before make
-https://github.com/pd3v/diatonic
+$ utils/init.sh
 ```
-### Download libraries
+### Build from source
 ```sh
-./libs/adafruit-sh110x/init.sh
-./libs/rotaryencoder/init.sh
-./libs/easybutton/init.sh
-```
-### Build
-```sh
-mkdir build
-cd build
-cmake ..
-make
+$ mkdir build
+$ cd build
+$ cmake ..
+$ make
 ```
 ### Flash
+ - After plugging the Pico board into the host computer, the board appears as a Flash drive. If it does not, then unplug the board from the USB port. Hold down the **BOOTSEL** switch found on top of the board and plug the board back into the USB port. After three seconds, release the **BOOTSEL** switch.
+ - for MacOS
 ```sh
-cp flash.sh build
-cd build
-chmod +x flash.sh
-./flash.sh
+$ cp build/src/pequencer.uf2 /Volumes/<device name>
+```
+ - for Linux
+```sh
+$ cp build/src/pequencer.uf2 /media/<username>/<device name>
 ```
