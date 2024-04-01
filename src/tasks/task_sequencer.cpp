@@ -2,7 +2,6 @@
 
 void task_sequencer(void *pvParameters) {
   while (true) {
-    Logger::info("task_sequencer");
     vTaskDelay(1);
   }
 }
