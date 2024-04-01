@@ -20,9 +20,6 @@ namespace consts {
   constexpr int OLED_DC = 24;
   constexpr int OLED_CS = 22;
   constexpr int OLED_RST = 23;
-  constexpr int PIN_SWITCH = 0;
-  constexpr int PIN_ROTA = 18;
-  constexpr int PIN_ROTB = 17;
 };
 
 #endif
