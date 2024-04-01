@@ -28,6 +28,7 @@ EasyButton menuButtons[4] = {
     EasyButton(ACTION_BUTTONS[2], debounce, true, false),
     EasyButton(ACTION_BUTTONS[3], debounce, true, false)
 };
+
 RotaryEncoder encoder(ENCODER[2], ENCODER[1], RotaryEncoder::LatchMode::FOUR3);
 EasyButton encoderButton(ENCODER[0], debounce, true, false);
 
@@ -36,20 +37,20 @@ void checkPosition() {
 }
 
 void eventsRead() {
-  for (int i = 0; i < 8; ++i) {
-    channelButtons[i].read();
-  }
-  for (int i = 0; i < 4; ++i) {
+  for (int i = 0; i < sizeof(menuButtons) / sizeof(menuButtons[0]); ++i) {
     menuButtons[i].read();
+  }
+  for (int i = 0; i < sizeof(channelButtons) / sizeof(channelButtons[0]); ++i) {
+    channelButtons[i].read();
   }
   encoderButton.read();
 }
 
 void beginButtons() {
-  for (int i = 0; i < 4; ++i) {
+  for (int i = 0; i < sizeof(menuButtons) / sizeof(menuButtons[0]); ++i) {
     menuButtons[i].begin();
   }
-  for (int i = 0; i < 8; ++i) {
+  for (int i = 0; i < sizeof(channelButtons) / sizeof(channelButtons[0]); ++i) {
     channelButtons[i].begin();
   }
   encoderButton.begin();
