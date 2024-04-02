@@ -5,20 +5,16 @@ const int ACTION_BUTTONS[4] = {3, 6, 9, 12};
 const int ENCODER[3] = {0, 18, 17}; // 1. Switch pin, 2. Pin Rotation A 3. Pin rotation B
 int debounce = 5;
 
-struct oldValues {
-  int oldMenuPosition = 1;
-  int oldSubMenuPosition = 1;
-  int oldChannel = 1;
-  int oldEncoderPosition = 1;
-};
-struct oldValues oldValuesStruct;
-struct values {
+struct dataStore {
   int menuPosition;
   int subMenuPosition;
   int channel;
   int encoderPosition;
 };
-struct values valuesStruct;
+dataStore oldStore;
+dataStore store;
+dataStore* ptrOldStore = &oldStore;
+dataStore* ptrStore = &store;
 
 EasyButton channelButtons[8] = {
     EasyButton(BUTTONS[0], debounce, true, false),
@@ -43,7 +39,7 @@ EasyButton encoderButton(ENCODER[0], debounce, true, false);
 
 void encoderHandler() {
   encoder.tick();
-  valuesStruct.encoderPosition = encoder.getPosition();
+  ptrStore->encoderPosition = encoder.getPosition();
 }
 
 void eventsRead() {
@@ -67,37 +63,40 @@ void beginButtons() {
 }
 
 void handleCallbacks() {
-  menuButtons[0].onPressed([]() { (valuesStruct.menuPosition = 1); });
-  menuButtons[1].onPressed([]() { (valuesStruct.menuPosition = 2); });
-  menuButtons[2].onPressed([]() { (valuesStruct.menuPosition = 3); });
-  menuButtons[3].onPressed([]() { (valuesStruct.menuPosition = 4); });
-  channelButtons[0].onPressed([]() { (valuesStruct.channel = 1); });
-  channelButtons[1].onPressed([]() { (valuesStruct.channel = 2); });
-  channelButtons[2].onPressed([]() { (valuesStruct.channel = 3); });
-  channelButtons[3].onPressed([]() { (valuesStruct.channel = 4); });
-  channelButtons[4].onPressed([]() { (valuesStruct.channel = 5); });
-  channelButtons[5].onPressed([]() { (valuesStruct.channel = 6); });
-  channelButtons[6].onPressed([]() { (valuesStruct.channel = 7); });
-  channelButtons[7].onPressed([]() { (valuesStruct.channel = 8); });
-  encoderButton.onPressed([]() { (valuesStruct.subMenuPosition += 1); });
+  menuButtons[0].onPressed([]() { (ptrStore->menuPosition = 1); });
+  menuButtons[1].onPressed([]() { (ptrStore->menuPosition = 2); });
+  menuButtons[2].onPressed([]() { (ptrStore->menuPosition = 3); });
+  menuButtons[3].onPressed([]() { (ptrStore->menuPosition = 4); });
+  channelButtons[0].onPressed([]() { (ptrStore->channel = 1); });
+  channelButtons[1].onPressed([]() { (ptrStore->channel = 2); });
+  channelButtons[2].onPressed([]() { (ptrStore->channel = 3); });
+  channelButtons[3].onPressed([]() { (ptrStore->channel = 4); });
+  channelButtons[4].onPressed([]() { (ptrStore->channel = 5); });
+  channelButtons[5].onPressed([]() { (ptrStore->channel = 6); });
+  channelButtons[6].onPressed([]() { (ptrStore->channel = 7); });
+  channelButtons[7].onPressed([]() { (ptrStore->channel = 8); });
+  encoderButton.onPressed([]() { (ptrStore->subMenuPosition += 1); });
 }
 
 void updateDataStore () {
-  if (oldValuesStruct.oldMenuPosition != valuesStruct.menuPosition) {
-    printf("NewMenuPosition: %d\n", valuesStruct.menuPosition);
-    oldValuesStruct.oldMenuPosition = valuesStruct.menuPosition;
+  // TODO: Create a loop that will send data to the FreeRTOS queue.
+  // ref.: https://www.freertos.org/a00117.html
+  // prints should be executed under #ifdef DEBUG
+  if (ptrOldStore->menuPosition != ptrStore->menuPosition) {
+    printf("NewMenuPosition: %d\n", ptrStore->menuPosition);
+    ptrOldStore->menuPosition = ptrStore->menuPosition;
   }
-  if (oldValuesStruct.oldChannel!= valuesStruct.channel) {
-    printf("New Channel Position: %d\n", valuesStruct.channel);
-    oldValuesStruct.oldChannel = valuesStruct.channel;
+  if (ptrOldStore->channel!= ptrStore->channel) {
+    printf("New Channel Position: %d\n", ptrStore->channel);
+    ptrOldStore->channel = ptrStore->channel;
   }
-  if (oldValuesStruct.oldSubMenuPosition!= valuesStruct.subMenuPosition) {
-    printf("New SubMenu Position: %d\n", valuesStruct.subMenuPosition);
-    oldValuesStruct.oldSubMenuPosition = valuesStruct.subMenuPosition;
+  if (ptrOldStore->subMenuPosition!= ptrStore->subMenuPosition) {
+    printf("New SubMenu Position: %d\n", ptrStore->subMenuPosition);
+    ptrOldStore->subMenuPosition = ptrStore->subMenuPosition;
   }
-  if (oldValuesStruct.oldEncoderPosition!= valuesStruct.encoderPosition) {
-    printf("New SubMenu Position: %d\n", valuesStruct.encoderPosition);
-    oldValuesStruct.oldEncoderPosition= valuesStruct.encoderPosition;
+  if (ptrOldStore->encoderPosition!= ptrStore->encoderPosition) {
+    printf("New SubMenu Position: %d\n", ptrStore->encoderPosition);
+    ptrOldStore->encoderPosition= ptrStore->encoderPosition;
   }
 }
 
