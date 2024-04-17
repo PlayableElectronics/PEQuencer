@@ -1,21 +1,17 @@
 #include "tasks/task_hardware.hpp"
+#include "api/Compat.h"
+#include "data_store.hpp"
+
+dataStore oldStore;
+dataStore store;
+dataStore *ptrOldStore = &oldStore;
+dataStore *ptrStore = &store;
 
 const int BUTTONS[8] = {1, 2, 4, 5, 7, 8, 10, 11};
 const int ACTION_BUTTONS[4] = {3, 6, 9, 12};
 const int ENCODER[3] = {
     0, 18, 17}; // 1. Switch pin, 2. Pin Rotation A 3. Pin rotation B
 int debounce = 5;
-
-struct dataStore {
-  int menuPosition;
-  int subMenuPosition;
-  int channel;
-  int encoderPosition;
-};
-dataStore oldStore;
-dataStore store;
-dataStore *ptrOldStore = &oldStore;
-dataStore *ptrStore = &store;
 
 EasyButton channelButtons[8] = {EasyButton(BUTTONS[0], debounce, true, false),
                                 EasyButton(BUTTONS[1], debounce, true, false),
@@ -76,25 +72,27 @@ void handleCallbacks() {
   encoderButton.onPressed([]() { (ptrStore->subMenuPosition += 1); });
 }
 
-void updateDataStore() {
-  // TODO: Create a loop that will send data to the FreeRTOS queue.
-  // ref.: https://www.freertos.org/a00117.html
-  // prints should be executed under #ifdef DEBUG
+void updateDataStore(QueueHandle_t queue) {
+  bool flag = false;
   if (ptrOldStore->menuPosition != ptrStore->menuPosition) {
-    printf("NewMenuPosition: %d\n", ptrStore->menuPosition);
+    flag = true;
     ptrOldStore->menuPosition = ptrStore->menuPosition;
   }
   if (ptrOldStore->channel != ptrStore->channel) {
-    printf("New Channel Position: %d\n", ptrStore->channel);
+    flag = true;
     ptrOldStore->channel = ptrStore->channel;
   }
   if (ptrOldStore->subMenuPosition != ptrStore->subMenuPosition) {
-    printf("New SubMenu Position: %d\n", ptrStore->subMenuPosition);
+    flag = true;
     ptrOldStore->subMenuPosition = ptrStore->subMenuPosition;
   }
   if (ptrOldStore->encoderPosition != ptrStore->encoderPosition) {
-    printf("New SubMenu Position: %d\n", ptrStore->encoderPosition);
+    flag = true;
     ptrOldStore->encoderPosition = ptrStore->encoderPosition;
+  }
+  
+  if (flag) {
+    xQueueSend(queue, &ptrStore, portMAX_DELAY);
   }
 }
 
@@ -105,9 +103,10 @@ void task_hardware(void *pvParameters) {
   attachInterrupt(digitalPinToInterrupt(ENCODER[2]), encoderHandler, CHANGE);
   beginButtons();
   handleCallbacks();
+  QueueHandle_t xQueue = (QueueHandle_t)pvParameters;
   while (true) {
     eventsRead();
-    updateDataStore();
+    updateDataStore(xQueue);
     vTaskDelay(1);
   }
 }
