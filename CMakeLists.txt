@@ -33,9 +33,11 @@ add_subdirectory(submodules/diatonic lib/diatonic)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_BINARY_DIR} ".")
 
 add_executable(pequencer
-  #usb_descriptors.c
   src/main.cpp
-  #Playtune.cpp
+  src/logger.cpp
+  src/tasks/task_display.cpp
+  src/tasks/task_hardware.cpp
+  src/tasks/task_sequencer.cpp
 )
 
 target_link_libraries(pequencer
@@ -43,8 +45,6 @@ target_link_libraries(pequencer
   pico_stdio_usb
   hardware_i2c
   hardware_pio
-  #tinyusb_device
-  #tinyusb_board
   freertos
   pac-adafruit-sh110x
   pac-rotaryencoder
