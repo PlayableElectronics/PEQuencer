@@ -1,30 +1,40 @@
 from .channel import Channel
-from .button import Button
-from .encoder import Encoder
-from .display import Display
 import time
+from queue import Empty
 
 
 class Sequencer:
+    """
+    Sequencer interface
+    """
+
     def __init__(
         self,
-        global_bpm: int = 120,
-        channels: int = 8,
-        buttons: int = 8,
-        encoders: int = 1,
+        hardware_to_sequencer_queue,
+        sequencer_to_display_queue,
+        bpm: int = 120,
+        num_of_channels: int = 8,
     ) -> None:
-        self.global_bpm = global_bpm
+        self.hardware_to_sequencer_queue = hardware_to_sequencer_queue
+        self.sequencer_to_display_queue = sequencer_to_display_queue
+        self.bpm = bpm
+        self.channels = [Channel(channel + 1) for channel in range(num_of_channels)]
+        [print(channel) for channel in self.channels]
 
-        self.channels = [Channel(num + 1) for num in range(channels)]
-        self.buttons = [Button(num + 1) for num in range(buttons)]
-        self.encoders = [Encoder(num + 1) for num in range(encoders)]
-        self.display = Display()
-        self.display.run()  # mock
+    def task_sequencer(self) -> None:
+        self.__run()
 
-    def run(self) -> None:
+    def __run(self) -> None:
         while True:
-            self.wait(self.global_bpm)
+            print("task sequencer")
+            self.__get_data_from_hardware()
+            # Sequencer logic implementation
+            self.sequencer_to_display_queue.put(...)
+            ...
+            time.sleep(60 / self.bpm)
 
-    def wait(self, bpm) -> None:
-        time.sleep(60 / bpm)
-        pass
+    def __get_data_from_hardware(self) -> ...:
+        try:
+            print(self.hardware_to_sequencer_queue.get_nowait())
+        except Empty:
+            pass

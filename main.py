@@ -1,3 +1,3 @@
-from sequencer.sequencer import Sequencer
+from sequencer.system import ThreadManager
 
-Sequencer()
+ThreadManager()
