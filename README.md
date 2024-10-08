@@ -4,7 +4,7 @@
 ```sh
 $ brew install cmake
 $ brew tap ArmMbed/homebrew-formulae
-$ brew install arm-none-eabi-gcc
+$ brew install --cask gcc-arm-embedded
 ```
 - for Linux
 ```sh
