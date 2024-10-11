@@ -15,8 +15,11 @@ static void init() {
 }
 
 static void init_tasks() {
+  /* Create Queues */
   static QueueHandle_t xClock = xQueueCreate(1, sizeof(unsigned int));
   static QueueHandle_t xNote = xQueueCreate(1, sizeof(unsigned int[16]));
+
+  /* Run tasks */
   xTaskCreate(task_clock, "clock", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
   xTaskCreate(task_display, "display", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
   xTaskCreate(task_sequencer, "sequencer", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
