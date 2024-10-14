@@ -34,6 +34,8 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_BINARY_D
 
 add_executable(pequencer
   src/main.cpp
+  src/data_store.cpp
+  src/channel.cpp
   src/tasks/task_display.cpp
   src/display.cpp
   src/tasks/task_hardware.cpp
