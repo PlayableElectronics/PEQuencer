@@ -38,7 +38,8 @@ void draw_menu(Adafruit_SH1106G *display) {
 
         printf("menu::menu_position: %i\n", menu::menu_position);
         printf("menu::channel: %i\n", menu::channel);
-        printf("channel::channels[menu::channel-1].number: %i\n", channel::channels[2].number);
+        printf("channel::channels[menu::channel-1].number: %i\n",
+               channel::channels[2].number);
 
       } else {
       }
@@ -46,8 +47,15 @@ void draw_menu(Adafruit_SH1106G *display) {
   }
 }
 
-void draw_channel_state(Adafruit_SH1106G *display) {}
-
+void draw_channel_state(Adafruit_SH1106G *display) {
+  /* display channel number */
+  display->setTextColor(SH110X_WHITE);
+  display->setCursor(2, 55);
+  display->print(menu::channel);
+  display->setCursor(9, 55);
+  if (channel::channels[menu::channel - 1].is_muted)
+    display->print("MUTE");
+}
 } // namespace menu_utils
 
 void task_display(void *pv_parameters) {
