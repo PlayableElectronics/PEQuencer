@@ -3,15 +3,12 @@
 
 #include "channel.hpp"
 
-namespace menu {
+namespace storage {
+extern Channel channels[8];
 extern int menu_position;
 extern int submenu_position;
 extern const char *names[4][6];
 extern int channel;
-} // namespace menu
-
-namespace channel {
-extern Channel channels[8];
-} // namespace channel
+} // namespace store
 
 #endif

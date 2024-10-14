@@ -21,11 +21,11 @@ void display(Adafruit_SH1106G *display) { display->display(); }
 void draw_menu(Adafruit_SH1106G *display) {
   for (int i = 0; i < 4; ++i) {
     for (int j = 0; j < 5; ++j) {
-      if (menu::names[i][j] != nullptr) {
-        // debug printf("%s\n", menu::names[i][j]);
+      if (storage::names[i][j] != nullptr) {
+        // debug printf("%s\n", storage::names[i][j]);
         /* Rectangle under inscription */
         display->setTextColor(SH110X_BLACK);
-        if (menu::submenu_position == j + 1) {
+        if (storage::submenu_position == j + 1) {
           display->fillRect(0, j * 10, 31, 11, SH110X_BLACK);
           display->setTextColor(SH110X_WHITE);
         } else {
@@ -33,12 +33,12 @@ void draw_menu(Adafruit_SH1106G *display) {
         }
         /* Menu name */
         display->setCursor(1, j * 10 + 2);
-        display->print(menu::names[i][j]);
+        display->print(storage::names[i][j]);
 
-        printf("menu::menu_position: %i\n", menu::menu_position);
-        printf("menu::channel: %i\n", menu::channel);
-        printf("channel::channels[menu::channel-1].number: %i\n",
-               channel::channels[2].number);
+        printf("storage::menu_position: %i\n", storage::menu_position);
+        printf("storage::channel: %i\n", storage::channel);
+        printf("channel::channels[storage::channel-1].number: %i\n",
+               storage::channels[2].number);
 
       } else {
         /* use later */
@@ -51,9 +51,9 @@ void draw_channel_state(Adafruit_SH1106G *display) {
   /* display channel number */
   display->setTextColor(SH110X_WHITE);
   display->setCursor(2, 55);
-  display->print(menu::channel);
+  display->print(storage::channel);
   display->setCursor(9, 55);
-  if (channel::channels[menu::channel - 1].is_muted)
+  if (storage::channels[storage::channel - 1].is_muted)
     display->print("MUTE");
 }
 
