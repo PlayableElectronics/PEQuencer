@@ -11,10 +11,12 @@ void MacropadDisplay::initialize() {
   display->begin(0, true);
   display->setTextSize(1);
   display->setTextColor(SH110X_BLACK, SH110X_WHITE);
-  display->clearDisplay();
+  this->clear();
 };
 
-void MacropadDisplay::clear() { display->clearDisplay(); }
+void MacropadDisplay::clear() {
+  display->clearDisplay();
+}
 
 void MacropadDisplay::print() {
   display->setCursor(2, 55);  // Ustawienie kursora
