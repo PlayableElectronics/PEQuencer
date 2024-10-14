@@ -18,7 +18,6 @@ void clear(Adafruit_SH1106G *display) { display->clearDisplay(); }
 void display(Adafruit_SH1106G *display) { display->display(); }
 } // namespace display_utils
 
-namespace menu_utils {
 void draw_menu(Adafruit_SH1106G *display) {
   for (int i = 0; i < 4; ++i) {
     for (int j = 0; j < 5; ++j) {
@@ -42,6 +41,7 @@ void draw_menu(Adafruit_SH1106G *display) {
                channel::channels[2].number);
 
       } else {
+        /* use later */
       }
     }
   }
@@ -56,7 +56,6 @@ void draw_channel_state(Adafruit_SH1106G *display) {
   if (channel::channels[menu::channel - 1].is_muted)
     display->print("MUTE");
 }
-} // namespace menu_utils
 
 void task_display(void *pv_parameters) {
   Adafruit_SH1106G display{128, 64, 27, 26, 24, 23, 22};
@@ -65,8 +64,8 @@ void task_display(void *pv_parameters) {
   while (true) {
     display_utils::clear(display_ptr);
     /* start displaying */
-    menu_utils::draw_menu(display_ptr);
-    menu_utils::draw_channel_state(display_ptr);
+    draw_menu(display_ptr);
+    draw_channel_state(display_ptr);
     /* end displaying */
     display_utils::display(display_ptr);
     vTaskDelay(1);
