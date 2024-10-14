@@ -1,8 +1,9 @@
 #include "tasks/task_display.hpp"
 #include "Adafruit_SH110X.h"
-#include "data_store.hpp"
+#include "data_storage.hpp"
 #include "display.hpp"
 #include <FreeRTOS.h>
+#include "buttons.hpp"
 #include <task.h>
 
 namespace display_utils {
@@ -34,12 +35,6 @@ void draw_menu(Adafruit_SH1106G *display) {
         /* Menu name */
         display->setCursor(1, j * 10 + 2);
         display->print(storage::names[i][j]);
-
-        printf("storage::menu_position: %i\n", storage::menu_position);
-        printf("storage::channel: %i\n", storage::channel);
-        printf("channel::channels[storage::channel-1].number: %i\n",
-               storage::channels[2].number);
-
       } else {
         /* use later */
       }
@@ -61,7 +56,13 @@ void task_display(void *pv_parameters) {
   Adafruit_SH1106G display{128, 64, 27, 26, 24, 23, 22};
   Adafruit_SH1106G *display_ptr = &display;
   display_utils::initialize(display_ptr);
+  buttons::initialize();
   while (true) {
+    buttons::update_buttons_state();
+    printf("DEBUG menu_position: %i\n", storage::menu_position);
+    printf("DEBUG channel: %i\n", storage::channel);
+    printf("DEBUG get_rotary_encoder_position: %i\n", buttons::get_rotary_encoder_position());
+    printf("DEBUG get_click_encoder_position: %i\n", buttons::get_click_encoder_position());
     display_utils::clear(display_ptr);
     /* start displaying */
     draw_menu(display_ptr);
