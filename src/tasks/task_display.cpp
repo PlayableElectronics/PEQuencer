@@ -45,10 +45,10 @@ static void draw_menu(Adafruit_SH1106G *display) {
 }
 
 static void handle_submenu_position() {
-  for (int i = 0; i < 4; ++i) {
+  for (int i{0}; i < 4; ++i) {
     if (i + 1 != storage::menu_position)
       continue;
-    for (int j = 0; j < 5; ++j) {
+    for (int j{0}; j < 5; ++j) {
       if (storage::names[i][j] == nullptr) {
         storage::submenu_position = 1;
         continue;

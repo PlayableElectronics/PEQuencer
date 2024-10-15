@@ -6,9 +6,9 @@
 constexpr int PIN_ROTA{18};
 constexpr int PIN_ROTB{17};
 
-int encoder_click_position = 0;
+int encoder_click_position{0};
 
-EasyButton channel_buttons[8] = {
+EasyButton channel_buttons[8]{
     EasyButton(consts::led_pins[0], consts::debounce_value, true, false),
     EasyButton(consts::led_pins[1], consts::debounce_value, true, false),
     EasyButton(consts::led_pins[2], consts::debounce_value, true, false),
@@ -17,20 +17,22 @@ EasyButton channel_buttons[8] = {
     EasyButton(consts::led_pins[5], consts::debounce_value, true, false),
     EasyButton(consts::led_pins[6], consts::debounce_value, true, false),
     EasyButton(consts::led_pins[7], consts::debounce_value, true, false)};
-EasyButton menu_buttons[4] = {
+
+EasyButton menu_buttons[4]{
     EasyButton(consts::menu_led_pins[0], consts::debounce_value, true, false),
     EasyButton(consts::menu_led_pins[1], consts::debounce_value, true, false),
     EasyButton(consts::menu_led_pins[2], consts::debounce_value, true, false),
     EasyButton(consts::menu_led_pins[3], consts::debounce_value, true, false)};
+
 EasyButton encoder_button(consts::switch_pin, consts::debounce_value, true,
                           false);
 
 RotaryEncoder encoder(PIN_ROTB, PIN_ROTA, RotaryEncoder::LatchMode::FOUR3);
 void buttons::update_buttons_state() {
-  for (int i = 0; i < 4; ++i) {
+  for (int i{0}; i < 4; ++i) {
     menu_buttons[i].read();
   }
-  for (int i = 0; i < 8; ++i) {
+  for (int i{0}; i < 8; ++i) {
     channel_buttons[i].read();
   }
   encoder_button.read();
@@ -94,11 +96,11 @@ void buttons::initialize() {
   attachInterrupt(digitalPinToInterrupt(PIN_ROTA), callbacks::set_rotary, CHANGE);
   attachInterrupt(digitalPinToInterrupt(PIN_ROTB), callbacks::set_rotary, CHANGE);
 
-  for (int i = 0; i < 4; ++i) {
+  for (int i{0}; i < 4; ++i) {
     menu_buttons[i].begin();
     menu_buttons[i].onPressed(menu_callbacks[i]);
   }
-  for (int i = 0; i < 8; ++i) {
+  for (int i{0}; i < 8; ++i) {
     channel_buttons[i].begin();
     channel_buttons[i].onPressed(channel_callbacks[i]);
   }
