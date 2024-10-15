@@ -65,8 +65,6 @@ void task_display(void *pv_parameters) {
     display_utils::clear(display_ptr);
     /* start displaying */
     draw_menu(display_ptr);
-    printf("menu_position %i\n", storage::menu_position);
-    printf("submenu_position %i\n", storage::submenu_position);
     draw_channel_state(display_ptr);
     /* end displaying */
     display_utils::display(display_ptr);
