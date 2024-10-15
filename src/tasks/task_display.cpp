@@ -32,7 +32,7 @@ static void draw_item(Adafruit_SH1106G *display, const char *item_name,
 }
 
 static void draw_menu(Adafruit_SH1106G *display) {
-  for (int i = 0; i < 4; ++i) {
+  for (int i{0}; i < 4; ++i) {
     if (i + 1 != storage::menu_position)
       continue;
     for (int j = 0; j < 5; ++j) {
