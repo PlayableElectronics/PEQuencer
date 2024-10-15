@@ -24,8 +24,12 @@ void draw_menu(Adafruit_SH1106G *display) {
     if (i + 1 != storage::menu_position)
       continue;
     for (int j = 0; j < 5; ++j) {
-      if (storage::names[i][j] == nullptr)
+      if (storage::names[i][j] == nullptr) {
+        storage::submenu_position = 1;
         continue;
+      }
+      if (storage::submenu_position > 5)
+        storage::submenu_position = 1;
       /* Rectangle under inscription */
       display->setTextColor(SH110X_BLACK);
       if (storage::submenu_position == j + 1) {
@@ -61,6 +65,8 @@ void task_display(void *pv_parameters) {
     display_utils::clear(display_ptr);
     /* start displaying */
     draw_menu(display_ptr);
+    printf("menu_position %i\n", storage::menu_position);
+    printf("submenu_position %i\n", storage::submenu_position);
     draw_channel_state(display_ptr);
     /* end displaying */
     display_utils::display(display_ptr);

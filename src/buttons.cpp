@@ -62,7 +62,7 @@ void set_rotary() { encoder.tick(); }
 
 /* Encoder callback */
 void encoder_callback() {
-  encoder_click_position += 1;
+  storage::submenu_position += 1;
 }
 }; // namespace callbacks
 
