@@ -3,8 +3,14 @@
 #include <EasyButton.h>
 #include <RotaryEncoder.h>
 
+namespace consts {
 constexpr int PIN_ROTA{18};
 constexpr int PIN_ROTB{17};
+constexpr int led_pins[8]{1, 2, 4, 5, 7, 8, 10, 11};
+constexpr int menu_led_pins[4]{3, 6, 9, 12};
+constexpr int switch_pin{0};
+constexpr int debounce_value{5};
+} // namespace consts
 
 int encoder_click_position{0};
 
@@ -27,7 +33,7 @@ EasyButton menu_buttons[4]{
 EasyButton encoder_button(consts::switch_pin, consts::debounce_value, true,
                           false);
 
-RotaryEncoder encoder(PIN_ROTB, PIN_ROTA, RotaryEncoder::LatchMode::FOUR3);
+RotaryEncoder encoder(consts::PIN_ROTB, consts::PIN_ROTA, RotaryEncoder::LatchMode::FOUR3);
 void buttons::update_buttons_state() {
   for (int i{0}; i < 4; ++i) {
     menu_buttons[i].read();
@@ -63,9 +69,7 @@ void set_channel_8() { storage::channel = 8; };
 void set_rotary() { encoder.tick(); }
 
 /* Encoder callback */
-void encoder_callback() {
-  storage::submenu_position += 1;
-}
+void encoder_callback() { storage::submenu_position += 1; }
 }; // namespace callbacks
 
 void (*menu_callbacks[4])() = {callbacks::set_menu_1, callbacks::set_menu_2,
@@ -91,10 +95,12 @@ void buttons::set_click_encoder_position(const int value) {
 int buttons::get_click_encoder_position() { return encoder_click_position; }
 
 void buttons::initialize() {
-  pinMode(PIN_ROTA, INPUT_PULLUP);
-  pinMode(PIN_ROTB, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(PIN_ROTA), callbacks::set_rotary, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(PIN_ROTB), callbacks::set_rotary, CHANGE);
+  pinMode(consts::PIN_ROTA, INPUT_PULLUP);
+  pinMode(consts::PIN_ROTB, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(consts::PIN_ROTA), callbacks::set_rotary,
+                  CHANGE);
+  attachInterrupt(digitalPinToInterrupt(consts::PIN_ROTB), callbacks::set_rotary,
+                  CHANGE);
 
   for (int i{0}; i < 4; ++i) {
     menu_buttons[i].begin();
