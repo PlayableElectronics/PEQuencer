@@ -3,8 +3,8 @@
 #include <EasyButton.h>
 #include <RotaryEncoder.h>
 
-const int PIN_ROTA{18};
-const int PIN_ROTB{17};
+constexpr int PIN_ROTA{18};
+constexpr int PIN_ROTB{17};
 
 int encoder_click_position = 0;
 
