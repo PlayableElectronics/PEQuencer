@@ -1,9 +1,9 @@
 #include "tasks/task_display.hpp"
 #include "Adafruit_SH110X.h"
+#include "buttons.hpp"
 #include "data_storage.hpp"
 #include "display.hpp"
 #include <FreeRTOS.h>
-#include "buttons.hpp"
 #include <task.h>
 
 namespace display_utils {
@@ -21,23 +21,22 @@ void display(Adafruit_SH1106G *display) { display->display(); }
 
 void draw_menu(Adafruit_SH1106G *display) {
   for (int i = 0; i < 4; ++i) {
+    if (i + 1 != storage::menu_position)
+      continue;
     for (int j = 0; j < 5; ++j) {
-      if (storage::names[i][j] != nullptr) {
-        // debug printf("%s\n", storage::names[i][j]);
-        /* Rectangle under inscription */
-        display->setTextColor(SH110X_BLACK);
-        if (storage::submenu_position == j + 1) {
-          display->fillRect(0, j * 10, 31, 11, SH110X_BLACK);
-          display->setTextColor(SH110X_WHITE);
-        } else {
-          display->fillRect(0, j * 10, 31, 11, SH110X_WHITE);
-        }
-        /* Menu name */
-        display->setCursor(1, j * 10 + 2);
-        display->print(storage::names[i][j]);
+      if (storage::names[i][j] == nullptr)
+        continue;
+      /* Rectangle under inscription */
+      display->setTextColor(SH110X_BLACK);
+      if (storage::submenu_position == j + 1) {
+        display->fillRect(0, j * 10, 31, 11, SH110X_BLACK);
+        display->setTextColor(SH110X_WHITE);
       } else {
-        /* use later */
+        display->fillRect(0, j * 10, 31, 11, SH110X_WHITE);
       }
+      /* Menu name */
+      display->setCursor(1, j * 10 + 2);
+      display->print(storage::names[i][j]);
     }
   }
 }
@@ -59,10 +58,6 @@ void task_display(void *pv_parameters) {
   buttons::initialize();
   while (true) {
     buttons::update_buttons_state();
-    printf("DEBUG menu_position: %i\n", storage::menu_position);
-    printf("DEBUG channel: %i\n", storage::channel);
-    printf("DEBUG get_rotary_encoder_position: %i\n", buttons::get_rotary_encoder_position());
-    printf("DEBUG get_click_encoder_position: %i\n", buttons::get_click_encoder_position());
     display_utils::clear(display_ptr);
     /* start displaying */
     draw_menu(display_ptr);
